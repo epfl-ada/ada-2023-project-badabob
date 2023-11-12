@@ -1,6 +1,5 @@
 A MODIFIER !!! ceci est un premier jet
-# ada-2023-project-badabob
-ada-2023-project-badabob created by GitHub Classroom
+
 Readme.md file containing the detailed project proposal (up to 1000 words). Your README.md should contain:
 Title
 Abstract: A 150 word description of the project idea and goals. What’s the motivation behind your project? What story would you like to tell, and why?
