@@ -1,9 +1,9 @@
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
-from imdb import Cinemagoer
 import ast
 import numpy as np
+from imdb import Cinemagoer
 
 
 ######################################### COMPLEMENTING DATASETS #######################################################
@@ -208,6 +208,8 @@ def merge_datasets_characters(characters_data, actors_data, movie_data):
     # Calculate age in years as an integer
     characters_data_final['actor_age'] = (
                 characters_data_final['release_date'] - (characters_data_final['actor_birthday']).astype(float))
+
+    characters_data_final = characters_data_final.drop(columns='actor_birthday')
 
     return characters_data_final.drop(columns='ordering')
 
