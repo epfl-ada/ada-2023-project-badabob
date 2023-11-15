@@ -162,9 +162,10 @@ def filter_IMDB_movie_dataset(data):
     return IMDB_data_us_en
 
 
-def filter_IMDB_character_dataset(dataframe, IMDB_ids):
+def clean_IMDB_character_dataset(dataframe, IMDB_ids):
     """
-    Filters the IMDB character dataset: removes all jobs other than actresses and actors,
+    Clean the IMDB character dataset: removes all jobs other than actresses and actors, keep only movies that are in
+    IMDB_ids, add the gender in the dataset, drops job and category columns, converts the character name in a string
     :param dataframe:
     :param IMDB_ids:
     :return:
@@ -194,7 +195,7 @@ def filter_IMDB_character_dataset(dataframe, IMDB_ids):
 def merge_datasets_characters(characters_data, actors_data, movie_data):
     characters_data_merged = pd.merge(characters_data, actors_data, on='nconst', how='left').copy()
     # remove columns we do not need in the character dataset
-    characters_movies_data = movie_data.drop(columns=['languages', 'countries', 'genre', 'plot_summary'])
+    characters_movies_data = movie_data.drop(columns=['genre', 'plot_summary'])
     characters_movies_data = characters_movies_data.rename(columns={'IMDB_ID': 'tconst'})
     characters_data_final = pd.merge(characters_data_merged, characters_movies_data, on='tconst', how='left').copy()
     # change name so that they are the same as our other dataset
@@ -202,7 +203,7 @@ def merge_datasets_characters(characters_data, actors_data, movie_data):
         columns={'tconst': 'IMDB_ID', 'nconst': 'actor_IMDB_ID', 'characters': 'character_name',
                  'primaryName': 'actor_name', 'birthYear': 'actor_birthday'})
     # compute actor age the year of the release
-    characters_data_final.loc[characters_data_final['actor_birthday'] == '\\N', 'actor_birthday'] = np.nan
+    characters_data_final.loc[characters_data_final['actor_birthday'] == '\\N', 'actor_birthday'] = None
     characters_data_final['actor_birthday'] = (characters_data_final['actor_birthday']).astype(float)
     # Calculate age in years as an integer
     characters_data_final['actor_age'] = (
