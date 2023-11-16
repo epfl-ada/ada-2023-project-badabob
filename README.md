@@ -31,62 +31,92 @@ Do higher-grossing movies rely more on gender stereotypes than others?
 This information will enable us to understand how gender stereotypes in movies fluctuate with time and whether this representation is affected by major women’s rights events in the US (e.g. right to vote, etc. found on Wikipedia). 
 
 ## Additional datasets
-**--> Proposed additional datasets (if any): List the additional dataset(s) you want to use (if any), and some ideas on how you expect to get, manage, process, and enrich it/them. Show us that you’ve read the docs and some examples, and that you have a clear idea on what to expect. Discuss data size and format if relevant. It is your responsibility to check that what you propose is feasible.**
+
+### A) Data from 2010 to 2022
+
+The [CMU dataset](https://www.cs.cmu.edu/~ark/personas/) only contains movies until 2012. We decided to complete our
+dataset until 2022. As a first step, we used the following 
+[IMDB non-comercial datasets](https://datasets.imdbws.com/):
+
+
+1) **title.principal.tsv**: contains information on the crew for each movie such as the job of the person and the 
+name of the character played if it applies.
+2) **names.basics.tsv**: contains information on movie crews such as birth years and professions.
+3) **title.akas.tsv**: contains multiple titles for each movie and information on each title such as language and country 
+in which it was used, and whether it is the original title of the movie.
+4) **title.basic.tsv**: contains information on movies such as the release date, the primary title and the genres.
+
+Datasets 1. and 2. were used to complete information on the characters. Genders were found by finding out whether the 
+job of the crew members were 'actor' or 'actress'. The age of each actor when starring in the movie could also be
+completed using the actor's birth year and the release year of each movie.
+
+Some important information is still missing from these datasets such as plot summaries, countries of production
+and languages. We thus used dataset 3. and 4. to collect IDs of movies that had a release date between 2010 and 2023 and 
+for which the american movie title is the same as the original title. We then used these IDs to directly retrieve 
+all the needed information on movies from  [IMDB](https://www.imdb.com/) using the 
+[Cinemagoer](https://github.com/cinemagoer/cinemagoer) Python package.
+
+
+### B) Data before 2010
+More than 3000 movies were deleted from the [CMU dataset](https://www.cs.cmu.edu/~ark/personas/) since they had 
+unknown languages. One of our next step would be to find the language of these movies on IMDB using 
+[Cinemagoer](https://github.com/cinemagoer/cinemagoer). This can be done easily since Cinemagoer allows to research
+movies not only with IMDB IDs but also with movie titles.
+
+Another important variable that we need to complete is the personnas. We will not use another dataset to do so but run the 
+pipeline described in [Bamman et al., 2013](https://www.cs.cmu.edu/~dbamman/pubs/pdf/bamman+oconnor+smith.acl13.pdf)
+using the [code of the authors](https://github.com/dbamman/ACL2013_Personas). This is expected to take a
+long time, so we will run it on a random subset of plot summaries for each year to reduce computational time.
 
 ## Methods
 
 1. **CMU dataset exploration and pre-processing**\
-First we explored the dataset to get familiar with it. We then pre-processed it according to our research questions.
-For example only keeping movies from the United States that were in English. 
+Preliminary exploration of the dataset to get familiar with it. Pre-processing according to our research questions
+(e.g only keeping movies from the United States that are in English). 
 
 2. **Data completion**\
-Given that the CMU dataset was created in 2012, we completed it up until 2020 using IMDb. This allowed us to obtain the final
-movie dataset as well as the final character dataset.
+Completion of the dataset up until 2022 using IMDb to obtain the final movie dataset and the final character dataset.
 
 3. **Acquisition of personnas for all characters**\
-Run the algorithm of personnas on the entirety of the characters in our dataset to obtain a more meaningful representation
+Running the personnas algorithm on more of the characters in our dataset to obtain a meaningful representation
 of the personnas over time. 
 
 4. **Preliminary analysis**\
-First, analyse the proportion of women in the movie industrie per year.  
-Then, analyze the age distribution of men vs women as well as the average age of both gender per year and compare them using a Student t-test.
-Then, analyze the personnas attributed to men adn women, and extract the most attributed personna per year for men and women
+Analysis of the proportion of women in the movie industrie per year.  
+Analysis of the age distribution of men vs women and the average age of both gender per year and comparison of the distributions using a Student t-test.
 
-6. **Genre Analysis**\
-Analyze which personnas are more present in different genres using an ANOVA test.
-Analyse the difference in women representation between genre and their statistical significance.
+5. **Personnas analysis**\
+Extraction of the most attributed personna per year for men and women.
+Analyse the evolution of the personnas attributed to men and women over time.
 
-8. **Main vs Secondary Characters** \
-Explore how the proportion of women in leading roles has evolved\
+6. **Main vs Secondary Characters** \
+Determine the proportion of women in leading roles and its evolution.\
 TO BE COMPLETED BY JULIAN
 
-9. **Regression for representation**\
-When can we expect equal representation of women and men in movies? Using a regression analysis
-we will predict, according to the trends of the last century, when this point will be reached.
+7. **Regression for representation**\
+Regression analysis to predict when equal representation of women and men in movies will theoretically be reached according to the trends of the last century.
 
-10. **Analyze Box office revenue**\
+8. **Genre Analysis**\
+Analysis of which personnas are more present in different genres using an ANOVA test.
+Re-do previous analysis on data split by genre to see whether women's representation vary between genres
+
+9. **Analyze Box office revenue**\
 Look at the correlation between successful movies (high box office revenue) and women
 representation using Pearson correlation coefficient or linear regression.
 
-11. **Characteristics of stereotypical women characters**\
-Find characteristics of characters that are stereotypical and non-stereotypical women. 
-Using a PCA to find the main factors that make a character fall into one of these categories.
-
-12. **Personnas analysis**\
-Analyse the evolution of the personnas attributed to men and women over time.
+10. **Characteristics of stereotypical women characters**\
+Use clustering methods to find common factors that make a character fall into stereotypical personnas.
 
 ## Proposed timeline
 
-* 17/11/2023 - Preliminary data processing, data completion, preliminary analysis of movies, characters and genres, implementation of natural language processing algorithm + ***Deliver Milestone 2***
-* 24/11/2023 - Obtain personnas for a larger set of characters, and implement statistical analysis on actors' gender and movie genres 
-* 01/12/2023 - Implement a regression analysis as well as clustering methods + ***Deliver Homework 2***
-* 08/12/2023 - Extract results for each research question 
-* 15/12/2023 - Data Story writing and web page design
+* 17/11/2023 - Preliminary data processing, data completion, first analysis of movies, characters and genres, implementation of natural language processing algorithm + ***Deliver Milestone 2***
+* 24/11/2023 - Preliminary analysis and obtain personnas for a larger set of characters and 
+* 01/12/2023 - Personnas analysis and implement regression for representation  + ***Deliver Homework 2***
+* 08/12/2023 - Main vs Secondary character analysis and analysis by genre
+* 15/12/2023 - Data Story writing, web page design and characteristics of stereotypical women characters
 * 22/12/2023 - ***Deliver Milestone 3***
 
 ## Organization within the team
-**--> Organization within the team: A list of internal milestones up until project Milestone P3.**
-
 
 <table class="tg">
   <tr>
