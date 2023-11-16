@@ -33,12 +33,12 @@ This information will enable us to understand how gender stereotypes in movies f
 
 ## Proposed timeline
 
-* 17/11/2023 - Preliminary data processing, data completion, Preliminary analysis of movies and characters, implementation of natural language processing algorithm + **Deliver Milestone 2**
-* 24/11/2023 - Implement statistical analysis and regression analysis, and obtain personnas for a larger set of characters
-* 01/12/2023 - Implement Clustering methods and methods on personnas + **Deliver Homework 2**
+* 17/11/2023 - Preliminary data processing, data completion, preliminary analysis of movies, characters and genres, implementation of natural language processing algorithm + ***Deliver Milestone 2***
+* 24/11/2023 - Obatin personnas for a larger set of characters, and implement statistical analysis on actors' gender and movie genres 
+* 01/12/2023 - Implement a regression analysis as well as clustering methods + ***Deliver Homework 2***
 * 08/12/2023 - Extract results for each research question 
-* 15/12/2023 - Data Story and Page Design
-* 22/12/2023 - **Deliver Milestone 3**
+* 15/12/2023 - Data Story writing and web page design
+* 22/12/2023 - ***Deliver Milestone 3***
 
 ## Organization within the team
 **--> Organization within the team: A list of internal milestones up until project Milestone P3.**
@@ -52,28 +52,30 @@ This information will enable us to understand how gender stereotypes in movies f
   <tr>
     <td>Julian Bär</td>
     <td>Natural Language Processing for Main/Secondary characters identification<br>
-        Main/Secondary character pattern evolution<br>
-        Develop web interface
+        statistical and clustering analysis of Main/Secondary character evolution<br>
+        Web page design
     </td>
   </tr>
   <tr>
     <td>Lucille Niederhauser</td>
     <td>Data completion<br>
         Time Line Analysis<br>
-        Personnas Computation
+        New personnas computation and analysis
     </td>
   </tr>
   <tr>
     <td>Victoria Rivet</td>
     <td>Gender and personnas priliminary analysis<br>
-        Regression analysis<br>
+        Regression analysis of actors' gender<br>
+        Correlation of the results with historical events<br>
         Text for datastory
     </td>
   </tr>
   <tr>
     <td>Anabel Salazar</td>
     <td>Data preprocessing and filtering<br>
-        Statistical analysis<br>
+        Statistical analysis of actors' gender<br>
+        Analysis of women's features (other than gender)<br>
         Text for datastory
     </td>
   </tr>
