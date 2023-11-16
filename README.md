@@ -124,14 +124,14 @@ Use clustering methods to find common factors that make a character fall into st
     <th>Tasks</th>
   </tr>
   <tr>
-    <td>Julian Bär @caleiga </td>
+    <td>Julian Bär </td>
     <td>Natural Language Processing for Main/Secondary characters identification<br>
         statistical and clustering analysis of Main/Secondary character evolution<br>
         Web page design
     </td>
   </tr>
   <tr>
-    <td>Lucille Niederhauser @lniederhauser</td>
+    <td>Lucille Niederhauser </td>
     <td>Data completion<br>
         Time Line Analysis<br>
         New personnas computation and analysis
