@@ -2,10 +2,14 @@ A MODIFIER !!! ceci est un premier jet
 
 # Hollywood Unveiled: Rewriting Women's Stories on the Silver Screen
 
-**--> A 150 word description of the project idea and goals. What’s the motivation behind your project? What story would you like to tell, and why?**  
+
 The perception and role of women in the US society has greatly evolved during the past centuries. Indeed, between the beginning of the 20th century and the beginning of the 21st century,
-women acquired a lot of rights and became more important. Women can now vote, work without the approval of their husband and some are even leading big companies, such as Mary Barra leading General Motors. 
-Everyday, women are fighting for their rights and to be as equal as men. But what about women's portrayal in the entertainment industry? Has this evolved at the same time as women gained more rights or does it remain just as stereotypical as before? 
+women were granted a myriad of new rights. Simultaneously, their perception has also evolved, shifting away from mere housewives. Women can now vote, work without the approval of their husband and some are even leading big companies, such as Mary Barra who sits at the head of General Motors. 
+To this day still, women keep fighting for their right to be treated fully equally with respect to their men counterparts. 
+Movies are often seen as a reflection of society, moving along with its ebbs and flows.
+But has this specific social movement bled into the entertainment industry? Has the portrayal of women evolved along the last
+century? Has their depiction progressed as important milestones in the Feminism movement were reached ? Or on the contrary,
+do women stereotypes still prevail in Hollywood ? 
 Simply put, is the entertainment industry a mirror of women's evolution in society?
 
 ## Table of Contents
@@ -31,10 +35,50 @@ This information will enable us to understand how gender stereotypes in movies f
 
 ## Methods
 
+1. **CMU dataset exploration and pre-processing**\
+First we explored the dataset to get familiar with it. We then pre-processed it according to our research questions.
+For example only keeping movies from the United States that were in English. 
+
+2. **Data completion**\
+Given that the CMU dataset was created in 2012, we completed it up until 2020 using IMDb. This allowed us to obtain the final
+movie dataset as well as the final character dataset.
+
+3. **Acquisition of personnas for all characters**\
+Run the algorithm of personnas on the entirety of the characters in our dataset to obtain a more meaningful representation
+of the personnas over time. 
+
+4. **Preliminary analysis**\
+First, analyse the proportion of women in the movie industrie per year.  
+Then, analyze the age distribution of men vs women as well as the average age of both gender per year and compare them using a Student t-test.
+Then, analyze the personnas attributed to men adn women, and extract the most attributed personna per year for men and women
+
+6. **Genre Analysis**\
+Analyze which personnas are more present in different genres using an ANOVA test.
+Analyse the difference in women representation between genre and their statistical significance.
+
+8. **Main vs Secondary Characters** \
+Explore how the proportion of women in leading roles has evolved\
+TO BE COMPLETED BY JULIAN
+
+9. **Regression for representation**\
+When can we expect equal representation of women and men in movies? Using a regression analysis
+we will predict, according to the trends of the last century, when this point will be reached.
+
+10. **Analyze Box office revenue**\
+Look at the correlation between successful movies (high box office revenue) and women
+representation using Pearson correlation coefficient or linear regression.
+
+11. **Characteristics of stereotypical women characters**\
+Find characteristics of characters that are stereotypical and non-stereotypical women. 
+Using a PCA to find the main factors that make a character fall into one of these categories.
+
+12. **Personnas analysis**\
+Analyse the evolution of the personnas attributed to men and women over time.
+
 ## Proposed timeline
 
 * 17/11/2023 - Preliminary data processing, data completion, preliminary analysis of movies, characters and genres, implementation of natural language processing algorithm + ***Deliver Milestone 2***
-* 24/11/2023 - Obatin personnas for a larger set of characters, and implement statistical analysis on actors' gender and movie genres 
+* 24/11/2023 - Obtain personnas for a larger set of characters, and implement statistical analysis on actors' gender and movie genres 
 * 01/12/2023 - Implement a regression analysis as well as clustering methods + ***Deliver Homework 2***
 * 08/12/2023 - Extract results for each research question 
 * 15/12/2023 - Data Story writing and web page design
@@ -65,7 +109,7 @@ This information will enable us to understand how gender stereotypes in movies f
   </tr>
   <tr>
     <td>Victoria Rivet</td>
-    <td>Gender and personnas priliminary analysis<br>
+    <td>Gender and personnas preliminary analysis<br>
         Regression analysis of actors' gender<br>
         Correlation of the results with historical events<br>
         Text for datastory
@@ -83,9 +127,12 @@ This information will enable us to understand how gender stereotypes in movies f
     <td>Maximilian Wettstein</td>
     <td>Movie genres primary analysis and clustering<br>
         Clustering analysis<br>
-        Generate interacting vizualisations for datastory
+        Generate interacting visualizations for datastory
     </td>
   </tr>
 </table>
 
 ## Questions for TAs
+
+1. Is it enough to deal with the increasing number of movies every year by normalizing by the number of movies we have in a 
+given year? 
