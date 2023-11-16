@@ -156,6 +156,8 @@ def filter_IMDB_movie_dataset(data):
     # keep only US movies
     IMDB_data_us = data[data['countries'].str.contains('United States', case=False)].copy()
     IMDB_data_us_en = IMDB_data_us[IMDB_data_us['languages'].str.contains('English' or 'American Sign', case=False)].copy()
+    # keep only movies from 2010-2022
+    IMDB_data_us_en = IMDB_data_us_en[(IMDB_data_us_en['release_date'] < 2023) & (IMDB_data_us_en['release_date'] > 2010)]
     # drop duplicates movie if any
     IMDB_data_us_en = IMDB_data_us_en.drop_duplicates(subset='IMDB_ID', keep='first')
 
@@ -166,9 +168,10 @@ def clean_IMDB_character_dataset(dataframe, IMDB_ids):
     """
     Clean the IMDB character dataset: removes all jobs other than actresses and actors, keep only movies that are in
     IMDB_ids, add the gender in the dataset, drops job and category columns, converts the character name in a string
-    :param dataframe:
-    :param IMDB_ids:
-    :return:
+    :param dataframe: pandas dataframe: dataframe to clean, should contain columns 'nconst' (character IMDB ID),
+    tconst (movie IMDB ID), characters, 'category', 'job' and 'ordering'
+    :param IMDB_ids: list of string: IMDB movie ids to clean
+    :return: a pandas dataframe
     """
 
     # only keep actors and actresses
@@ -193,39 +196,72 @@ def clean_IMDB_character_dataset(dataframe, IMDB_ids):
 
 
 def merge_datasets_characters(characters_data, actors_data, movie_data):
+    """
+    Completes the character data with information from the actor data (left join). Then merges the resulting dataset with
+    information about the movie (left join with movie_data). Computes the age of the actors the year of the release
+    and renames columns tconst, nconst, characters, primaryName and birthYear into IMDB_ID, actor_IMDB_ID, character_name,
+    actor_name and actor_birthday respectively.
+    :param characters_data: pandas dataframe: should at least contain columns 'nconst' (character IMDB ID),
+    'tconst' (movie IMDB ID), 'characters' and 'ordering'
+    :param actors_data: pandas dataframe: should at least contain columns 'nconst' (character IMDB ID),
+    'primaryName' (actor name) and 'birthYear'
+    :param movie_data: pandas dataframe: should at least contain columns: 'genre', 'plot_summary', 'IMDB_ID'
+    :return: merged and formatted pandas dataframe
+    """
+
     characters_data_merged = pd.merge(characters_data, actors_data, on='nconst', how='left').copy()
+
     # remove columns we do not need in the character dataset
     characters_movies_data = movie_data.drop(columns=['genre', 'plot_summary'])
     characters_movies_data = characters_movies_data.rename(columns={'IMDB_ID': 'tconst'})
+
     characters_data_final = pd.merge(characters_data_merged, characters_movies_data, on='tconst', how='left').copy()
-    # change name so that they are the same as our other dataset
+
+    # change columns name
     characters_data_final = characters_data_final.rename(
         columns={'tconst': 'IMDB_ID', 'nconst': 'actor_IMDB_ID', 'characters': 'character_name',
                  'primaryName': 'actor_name', 'birthYear': 'actor_birthday'})
+
     # compute actor age the year of the release
     characters_data_final.loc[characters_data_final['actor_birthday'] == '\\N', 'actor_birthday'] = None
     characters_data_final['actor_birthday'] = (characters_data_final['actor_birthday']).astype(float)
-    # Calculate age in years as an integer
     characters_data_final['actor_age'] = (
                 characters_data_final['release_date'] - (characters_data_final['actor_birthday']).astype(float))
 
+    # drop actor_birthday column
     characters_data_final = characters_data_final.drop(columns='actor_birthday')
 
     return characters_data_final.drop(columns='ordering')
 
 
-def remove_duplicated_columns(dataframe, columns_to_remove):
-    # when merges columns _x and _y are created
+def remove_duplicated_columns(dataframe, columns_to_remove, col_to_keep='_x', col_to_delete='_y'):
+    """
+    Merge columns that are duplicated when performing an outer merge (col_name_x and col_name_y) by keeping
+    col_name + col_to_keep if both columns do not contain NaNs or if col_name + col_to_delete contains NaN
+    and keeping col_name + col_to_delete otherwise.
+    :param dataframe: panda dataframe
+    :param columns_to_remove: list of string: name of the columns that were duplicated and need to be merged
+    :param col_to_keep: string: '_x' or '_y', indicates which column will be kept in the dataframe and will be used to
+    fill the NaNs in the other column
+    :param col_to_delete: string: '_x' or '_y' indicates which column will be deleted from the dataframe
+    :return: panda dataframe
+    """
     for col_name in columns_to_remove:
-        mask = dataframe[col_name + '_x'].isna()
-        dataframe.loc[mask, col_name + '_x'] = dataframe.loc[mask, col_name + '_y']
-        dataframe = dataframe.drop(columns=col_name + '_y')
-        dataframe = dataframe.rename(columns={col_name + '_x': col_name})
+        mask = dataframe[col_name + col_to_keep].isna()
+        dataframe.loc[mask, col_name + col_to_keep] = dataframe.loc[mask, col_name + col_to_delete]
+        dataframe = dataframe.drop(columns=col_name + col_to_delete)
+        dataframe = dataframe.rename(columns={col_name + col_to_keep: col_name})
 
     return dataframe
 
 
 def name_to_lowercase(dataframe, column_name):
+    """
+    Changes the content of column_name to lower cases
+    :param dataframe: panda dataframe
+    :param column_name: string: name of the column that needs to be put in lower case
+    :return: panda dataframe with 'column_name' content in lower case
+    """
     return [c.lower() if pd.notna(c) else c for c in dataframe[column_name]]
 
 
