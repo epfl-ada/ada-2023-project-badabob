@@ -40,7 +40,7 @@ First we explored the dataset to get familiar with it. We then pre-processed it 
 For example only keeping movies from the United States that were in English. 
 
 2. **Data completion**\
-Given that the CMU dataset was created in 2012, we completed it up until 2020 using IMD. This allowed us to obtain the final
+Given that the CMU dataset was created in 2012, we completed it up until 2020 using IMDb. This allowed us to obtain the final
 movie dataset as well as the final character dataset.
 
 3. **Acquisition of personnas for all characters**\
@@ -48,25 +48,32 @@ Run the algorithm of personnas on the entirety of the characters in our dataset 
 of the personnas over time. 
 
 4. **Preliminary analysis**\
-First, analyze the age distribution of men vs women using a Student t-test
-Then, analyze the personnas attributed to women and extract the most attributed personna per year for men and women
+First, analyse the proportion of women in the movie industrie per year.  
+Then, analyze the age distribution of men vs women as well as the average age of both gender per year and compare them using a Student t-test.
+Then, analyze the personnas attributed to men adn women, and extract the most attributed personna per year for men and women
 
-5. **Genre Analysis**\
+6. **Genre Analysis**\
 Analyze which personnas are more present in different genres using an ANOVA test.
+Analyse the difference in women representation between genre and their statistical significance.
 
-6. **Main vs Secondary Characters** \
+8. **Main vs Secondary Characters** \
 Explore how the proportion of women in leading roles has evolved\
 TO BE COMPLETED BY JULIAN
-7. **Regression for representation**\
-When can we expect equal representation of women and men in movies ? Using a regression analysis
-we will predict, according to the trends of the last century, when this point will be reached. 
-8. **Analyze Box office revenue**\
-Look at the correlation between successful movies (high box office revenue) and women
-representation using ???
-9. **Characteristics of Stereotypical women characters**\
-Find characteristics of characters that are stereotypical and non-stereotypical women. 
-Using a PCA to find the main factors that make a character fall into one of these categories. 
 
+9. **Regression for representation**\
+When can we expect equal representation of women and men in movies? Using a regression analysis
+we will predict, according to the trends of the last century, when this point will be reached.
+
+10. **Analyze Box office revenue**\
+Look at the correlation between successful movies (high box office revenue) and women
+representation using Pearson correlation coefficient or linear regression.
+
+11. **Characteristics of stereotypical women characters**\
+Find characteristics of characters that are stereotypical and non-stereotypical women. 
+Using a PCA to find the main factors that make a character fall into one of these categories.
+
+12. **Personnas analysis**\
+Analyse the evolution of the personnas attributed to men and women over time.
 
 ## Proposed timeline
 
