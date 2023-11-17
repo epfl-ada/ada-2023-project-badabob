@@ -1,17 +1,10 @@
-A MODIFIER !!! ceci est un premier jet
-
 # Hollywood Unveiled: Rewriting Women's Stories on the Silver Screen
 
-
-The perception and role of women in the US society has greatly evolved during the past centuries. Indeed, between the beginning of the 20th century and the beginning of the 21st century,
-women were granted a myriad of new rights. Simultaneously, their perception has also evolved, shifting away from mere housewives. Women can now vote, work without the approval of their husband and some are even leading big companies, such as Mary Barra who sits at the head of General Motors. 
-To this day still, women keep fighting for their right to be treated fully equally with respect to their men counterparts. 
+The perception and role of women in the US society has greatly evolved during the past centuries. Since the beginning of the 20th century,
+women were granted a myriad of new rights. Simultaneously, their perception has also evolved, shifting away from mere housewives. Women can now vote, work without their husband's approval and some are even leading big companies, such as Mary Barra who sits at the head of General Motors. 
+To this day still, women keep fighting for their right to be treated fully equally with respect to men. 
 Movies are often seen as a reflection of society, moving along with its ebbs and flows.
-But has this specific social movement bled into the entertainment industry? Has the portrayal of women evolved along the last
-century? Has their depiction progressed as important milestones in the Feminism movement were reached ? Or on the contrary,
-do women stereotypes still prevail in Hollywood ? 
-Simply put, is the entertainment industry a mirror of women's evolution in society?
-This information will enable us to understand how gender stereotypes in movies fluctuate with time and whether this representation is affected by major women’s rights events in the US (e.g. right to vote, etc. found on Wikipedia). 
+But has this specific social movement bled into the entertainment industry? Has the depiction of women progressed as important milestones in the Feminism movement were reached such as the Equal Pay Act? Or on the contrary, do women stereotypes still prevail in Hollywood? 
 
 ## Table of Contents
 
