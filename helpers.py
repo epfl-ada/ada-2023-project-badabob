@@ -1,9 +1,7 @@
-import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 import ast
-import numpy as np
-#from imdb import Cinemagoer
+from imdb import Cinemagoer
 import pandas as pd
 import nltk
 from nltk import pos_tag, word_tokenize
@@ -20,7 +18,9 @@ from flair.models import SequenceTagger
 from flair.data import Sentence
 from fuzzywuzzy import fuzz, process
 
+
 ######################################### COMPLEMENTING DATASETS #######################################################
+
 
 def get_history_timeline(save_path='DATA/', file_name='timeline.csv'):
     """
@@ -279,6 +279,7 @@ def name_to_lowercase(dataframe, column_name):
     return [c.lower() if pd.notna(c) else c for c in dataframe[column_name]]
 
 
+######################################### MAIN CHARACTER ANALYSIS ######################################################
 
 def select_elligible_movies_for_main_char_analysis(movie_metadata,character_metadata):
     # Removing movies without summaries
