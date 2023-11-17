@@ -79,13 +79,13 @@ Completion of the dataset up until 2022 using IMDb to obtain the final movie dat
 Running the personas algorithm from [Bamman et al., 2013](https://www.cs.cmu.edu/~dbamman/pubs/pdf/bamman+oconnor+smith.acl13.pdf) on more characters in our dataset to obtain a meaningful representation of the personas over time. 
 
 4. **Preliminary analysis**\
-Analysis of the proportion of women in the movie industrie per year.  
+Analysis of the proportion of women in the movie industry per year.  
 Analysis of the age distribution of men vs women and the average age of both gender per year and comparison of the distributions using a Student t-test.
 
 5. **Personas analysis**\
 Extraction of the most attributed persona per year to men and women.
 Analyse the evolution of the personas attributed to men and women over time.
-Study how varied are the personas associated to each gender.
+Study how varied the personas associated to each gender are. 
 
 6. **Main vs Secondary Characters** \
 Determine the proportion of women in leading roles and its evolution.\
