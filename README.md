@@ -87,9 +87,8 @@ Extraction of the most attributed persona per year to men and women.
 Analyse the evolution of the personas attributed to men and women over time.
 Study how varied the personas associated to each gender are. 
 
-6. **Main vs Secondary Characters** \
-Determine the proportion of women in leading roles and its evolution.\
-TO BE COMPLETED BY JULIAN
+6. **Main Characters** \
+Extract main characters and their gender from movie summaries to determine the proportion of women in leading roles and its evolution.\
 
 7. **Regression for representation**\
 Regression analysis to predict when equal representation of women and men in movies will theoretically be reached according to the trends of the last century.
@@ -119,8 +118,8 @@ Use clustering methods (to be determined) to find common factors that make a cha
   </tr>
   <tr>
     <td>Julian Bär </td>
-    <td>Natural Language Processing for Main/Secondary characters identification<br>
-        Statistical and clustering analysis of Main/Secondary character evolution<br>
+    <td>Natural Language Processing for Main characters identification<br>
+        Statistical and clustering analysis of Main character evolution<br>
         Web page design
     </td>
   </tr>
@@ -161,3 +160,4 @@ Use clustering methods (to be determined) to find common factors that make a cha
 1. Is it enough to deal with the increasing number of movies every year by normalizing by the number of movies we have in a 
 given year?
 2. We would also be interested in studying whether higher-grossing movies have a more or less stereotypical depiction of women. Do you have an idea on how we could correct the revenues for inflation? 
+3. One way to adress certain limitations mentioned in the main character analysis could be to prompt a model such as gpt4 or Llama2. Would this be allowed?

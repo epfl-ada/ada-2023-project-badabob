@@ -284,6 +284,12 @@ def name_to_lowercase(dataframe, column_name):
 ######################################### MAIN CHARACTER ANALYSIS ######################################################
 
 def select_elligible_movies_for_main_char_analysis(movie_metadata,character_metadata):
+    """
+    Selects movies that are elligible for the main character analysis
+    :param movie_metadata: panda dataframe
+    :param character_metadata: panda dataframe
+    :return elligible_movies: panda dataframe
+    """
     # Removing movies without summaries
     elligible_movies = movie_metadata[movie_metadata['plot_summary'].notna()]
     
@@ -331,6 +337,12 @@ def select_elligible_movies_for_main_char_analysis(movie_metadata,character_meta
 
 
 def extract_main_characters(summary: str, nb_sentences=5):
+    """
+    Extracts the most mentioned characters in a movie summary
+    :param summary: string
+    :param nb_sentences: integer
+    :return main_characters: list of strings
+    """
     tagger = SequenceTagger.load('ner')
 
     # Extracting and tagging first nb_sentences from summary
@@ -374,6 +386,12 @@ def extract_main_characters(summary: str, nb_sentences=5):
 
 
 def find_main_characters_genders(movie_row, characters_df):
+    """
+    Finds the gender of each character by matching character names to character metadata
+    :param movie_row: pandas dataframe (one row)
+    :param characters_df: pandas dataframe
+    :return genders: list of strings
+    """
     IMDB_ID_character_list = characters_df.loc[characters_df['IMDB_ID'] == movie_row['IMDB_ID']]
     wikipedia_ID_character_list = characters_df.loc[characters_df['wikipedia_ID'] == movie_row['wikipedia_ID']]
     selected_character_metadata = pd.concat([IMDB_ID_character_list,wikipedia_ID_character_list],ignore_index=True)
@@ -392,6 +410,12 @@ def find_main_characters_genders(movie_row, characters_df):
 
 
 def calculate_gender_ratio(genders:list):
+    """
+    Calculates the female to male gender ratio in a list of strings
+    containing ['M'] and ['F']
+    :param genders: list of strings
+    :return ratio: float
+    """
     flat_list = [gender for sublist in genders for gender in sublist]
     genders = [gender for gender in flat_list if gender in ['F', 'M']]
     nb_females = sum(1 for gender in genders if gender == 'F')
@@ -401,6 +425,10 @@ def calculate_gender_ratio(genders:list):
 
 
 def plot_gender_ratio(gender_list_per_year):
+    """
+    Plots the female to male gender ratio across time in years
+    :param gender_list_per_year: pandas dataframe
+    """
     plt.figure(figsize=(10, 6))
     sns.set(style='whitegrid')
     sns.lineplot(x=gender_list_per_year['release_date'], y=gender_list_per_year['gender_ratio'], linewidth=2.5, alpha=0.8)
@@ -417,6 +445,10 @@ def plot_gender_ratio(gender_list_per_year):
 
 
 def random_movies_per_year(group):
+    """
+    Selects 20 movies at random
+    :param group: pandas dataframe
+    """
     return group.sample(n=min(20, len(group)), random_state=10)
 
 ################################## GENRES PREPROCESSING ################################################################
