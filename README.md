@@ -87,28 +87,28 @@ Extraction of the most attributed persona per year to men and women.
 Analyse the evolution of the personas attributed to men and women over time.
 Study how varied are the personas associated to each gender.
 
-7. **Main vs Secondary Characters** \
+6. **Main vs Secondary Characters** \
 Determine the proportion of women in leading roles and its evolution.\
 TO BE COMPLETED BY JULIAN
 
-8. **Regression for representation**\
+7. **Regression for representation**\
 Regression analysis to predict when equal representation of women and men in movies will theoretically be reached according to the trends of the last century.
 
-9. **Genre Analysis**\
-Analysis of which personas are more present in different genres using an ANOVA test.
-Re-do previous analysis on data split by genre to see whether women's representation vary between genres
+8. **Genre Analysis**\
+Analysis of which women personas are more present in different genres using an ANOVA test.
+Re-do previous analysis (4 to 7) on data split by genre to see whether women's representation vary between genres.
 
-10. **Characteristics of stereotypical women characters**\
-Use clustering methods to find common factors that make a character fall into stereotypical personas.
+9. **Characteristics of stereotypical women characters**\
+Use clustering methods (to be determined) to find common factors that make a character fall into stereotypical personas.
 
 ## Proposed timeline
 
 * 17/11/2023 - Preliminary data processing, data completion, first analysis of movies, characters and genres, implementation of natural language processing algorithm + ***Deliver Milestone 2***
-* 24/11/2023 - Preliminary analysis and obtain personas for a larger set of characters and 
-* 01/12/2023 - personas analysis and implement regression for representation  + ***Deliver Homework 2***
+* 24/11/2023 - Preliminary analysis and obtain personas for a larger set of characters 
+* 01/12/2023 - Personas analysis and implement regression for representation  + ***Deliver Homework 2***
 * 08/12/2023 - Main vs Secondary character analysis and analysis by genre
-* 15/12/2023 - Data Story writing, web page design and characteristics of stereotypical women characters
-* 22/12/2023 - ***Deliver Milestone 3***
+* 15/12/2023 - Characteristics of stereotypical women characters
+* 22/12/2023 - Data Story writing and web page design + ***Deliver Milestone 3***
 
 ## Organization within the team
 
@@ -120,7 +120,7 @@ Use clustering methods to find common factors that make a character fall into st
   <tr>
     <td>Julian Bär </td>
     <td>Natural Language Processing for Main/Secondary characters identification<br>
-        statistical and clustering analysis of Main/Secondary character evolution<br>
+        Statistical and clustering analysis of Main/Secondary character evolution<br>
         Web page design
     </td>
   </tr>
@@ -149,7 +149,7 @@ Use clustering methods to find common factors that make a character fall into st
   </tr>
   <tr>
     <td>Maximilian Wettstein</td>
-    <td>Movie genres primary analysis and clustering<br>
+    <td>Movie genres analysis<br>
         Clustering analysis<br>
         Generate interacting visualizations for datastory
     </td>
