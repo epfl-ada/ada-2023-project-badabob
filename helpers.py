@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import ast
-from imdb import Cinemagoer
+#from imdb import Cinemagoer
 import pandas as pd
 import nltk
 from nltk import pos_tag, word_tokenize
@@ -17,7 +17,9 @@ from collections import Counter, defaultdict
 from flair.models import SequenceTagger
 from flair.data import Sentence
 from fuzzywuzzy import fuzz, process
-
+import seaborn as sns
+import matplotlib.pyplot as plt
+from scipy.stats import linregress
 
 ######################################### COMPLEMENTING DATASETS #######################################################
 
@@ -387,3 +389,28 @@ def find_main_characters_genders(movie_row, characters_df):
             genders.append(gender)
 
     return genders
+
+
+def calculate_gender_ratio(genders:list):
+    flat_list = [gender for sublist in genders for gender in sublist]
+    genders = [gender for gender in flat_list if gender in ['F', 'M']]
+    nb_females = sum(1 for gender in genders if gender == 'F')
+    if len(genders) == 0:
+        return float('nan')
+    return nb_females/len(genders)
+
+
+def plot_gender_ratio(gender_list_per_year):
+    plt.figure(figsize=(10, 6))
+    sns.set(style='whitegrid')
+    sns.lineplot(x=gender_list_per_year['release_date'], y=gender_list_per_year['gender_ratio'], linewidth=2.5, alpha=0.8)
+    sns.regplot(x=gender_list_per_year['release_date'], y=gender_list_per_year['gender_ratio'], scatter=False, color='red',label="Linear Regression, bootstrap, 95% Conf. Int.",ci=95)
+
+    plt.xlabel('Movie release year')
+    plt.ylabel('Female/Male ratio')
+    plt.title('Gender ratio in main characters over time')
+    plt.legend()
+    plt.show()
+
+    regression_results = linregress(gender_list_per_year['release_date'], gender_list_per_year['gender_ratio'])
+    print(regression_results)
