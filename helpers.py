@@ -3,8 +3,22 @@ import requests
 from bs4 import BeautifulSoup
 import ast
 import numpy as np
-from imdb import Cinemagoer
-
+#from imdb import Cinemagoer
+import pandas as pd
+import nltk
+from nltk import pos_tag, word_tokenize
+from nltk.tokenize import sent_tokenize
+from nltk.corpus import stopwords
+nltk.download('stopwords')
+nltk.download('punkt')
+from tqdm import tqdm
+import re
+import string
+from itertools import combinations
+from collections import Counter, defaultdict
+from flair.models import SequenceTagger
+from flair.data import Sentence
+from fuzzywuzzy import fuzz, process
 
 ######################################### COMPLEMENTING DATASETS #######################################################
 
@@ -265,3 +279,110 @@ def name_to_lowercase(dataframe, column_name):
     return [c.lower() if pd.notna(c) else c for c in dataframe[column_name]]
 
 
+
+def select_elligible_movies_for_main_char_analysis(movie_metadata,character_metadata):
+    # Removing movies without summaries
+    elligible_movies = movie_metadata[movie_metadata['plot_summary'].notna()]
+    
+    # Removing movies with no listed characters
+    movies_with_no_listed_char_wiki_ID = []
+    movies_with_no_listed_char_imdb_ID = []
+    for wiki_id,imdb_id in zip(elligible_movies['wikipedia_ID'],elligible_movies['IMDB_ID']):
+        
+        if not pd.isnull(wiki_id) and pd.isnull(imdb_id):
+            if character_metadata.loc[character_metadata['wikipedia_ID']==wiki_id].empty:
+                movies_with_no_listed_char_wiki_ID.append(wiki_id)
+            continue
+
+        if pd.isnull(wiki_id) and not pd.isnull(imdb_id):
+            if character_metadata.loc[character_metadata['IMDB_ID']==imdb_id].empty:
+                movies_with_no_listed_char_imdb_ID.append(imdb_id)
+            continue
+
+        if not pd.isnull(wiki_id) and not pd.isnull(imdb_id):
+            no_char_on_wikipedia = character_metadata.loc[character_metadata['wikipedia_ID']==wiki_id].empty
+            no_char_on_imdb = character_metadata.loc[character_metadata['IMDB_ID']==imdb_id].empty
+
+            if no_char_on_wikipedia and no_char_on_imdb:
+                movies_with_no_listed_char_wiki_ID.append(wiki_id)
+                movies_with_no_listed_char_imdb_ID.append(imdb_id)
+
+    elligible_movies = elligible_movies[~elligible_movies['wikipedia_ID'].isin(movies_with_no_listed_char_wiki_ID)]
+    elligible_movies = elligible_movies[~elligible_movies['IMDB_ID'].isin(movies_with_no_listed_char_imdb_ID)]
+
+
+    id_types = ['wikipedia_ID','IMDB_ID']
+    for id_type in id_types:
+
+        # Removing movies with characters having name listed as nan
+        movies_with_nan_characters_ID = pd.Series(character_metadata[character_metadata['character_name'].isna()][id_type].unique())
+        movies_with_nan_characters_ID = movies_with_nan_characters_ID.dropna().tolist()
+        elligible_movies = elligible_movies[~elligible_movies[id_type].isin(movies_with_nan_characters_ID)]
+
+        # Removing movies with characters having gender listed as nan
+        movies_with_nan_genders_ID = pd.Series(character_metadata[character_metadata['actor_gender'].isna()][id_type].unique())
+        movies_with_nan_genders_ID = movies_with_nan_genders_ID.dropna().tolist()
+        elligible_movies = elligible_movies[~elligible_movies[id_type].isin(movies_with_nan_genders_ID)]
+
+    return elligible_movies
+
+
+def extract_main_characters(summary: str, nb_sentences=5):
+    tagger = SequenceTagger.load('ner')
+
+    # Extracting and tagging first nb_sentences from summary
+    sentences = sent_tokenize(summary)
+    tagged_sentences = [Sentence(sent) for sent in sentences[:nb_sentences]]
+    tagger.predict(tagged_sentences)
+
+    # Extracting all names from the tagged sentences
+    entities = [entity for sent in tagged_sentences for entity in sent.to_dict(tag_type='ner')['entities']]
+    names = [entity['text'] for entity in entities if entity['labels'][0]['value'] == 'PER']
+
+    # Removing punctuation
+    names = [name.translate(str.maketrans('', '', string.punctuation)) for name in names]
+
+    names_numbered = Counter(names).most_common()
+
+    characters = defaultdict(int)
+
+    for name, count in names_numbered:
+        found = False
+        standardized_name = name.lower()
+
+        # Adding up number of counts if over 50% match
+        for existing_name in characters:
+            if fuzz.ratio(standardized_name, existing_name) > 50:
+                characters[existing_name] += count
+                found = True
+                break
+
+        # Adding name to character list if unique
+        if not found:
+            characters[standardized_name] += count
+
+    # Converting from dictionary to ordered list
+    ordered_characters = sorted(characters.items(), key=lambda x: x[1], reverse=True)
+    
+    ordered_characters = Counter(characters).most_common()
+    main_characters = [name for name, count in ordered_characters[:3]]
+    
+    return main_characters
+
+
+def find_main_characters_genders(movie_row, characters_df):
+    IMDB_ID_character_list = characters_df.loc[characters_df['IMDB_ID'] == movie_row['IMDB_ID']]
+    wikipedia_ID_character_list = characters_df.loc[characters_df['wikipedia_ID'] == movie_row['wikipedia_ID']]
+    selected_character_metadata = pd.concat([IMDB_ID_character_list,wikipedia_ID_character_list],ignore_index=True)
+
+    genders = []
+    for name in movie_row['main characters']:
+        confidence = 0
+        if selected_character_metadata['character_name'].any():
+            closest_character, confidence, score = process.extractOne(name, selected_character_metadata['character_name'])
+            
+        if confidence > 50:
+            gender = selected_character_metadata.loc[selected_character_metadata['character_name'] == closest_character, 'actor_gender'].values[0]
+            genders.append(gender)
+
+    return genders
