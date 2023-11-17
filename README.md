@@ -76,29 +76,29 @@ Preliminary exploration of the dataset to get familiar with it. Pre-processing a
 Completion of the dataset up until 2022 using IMDb to obtain the final movie dataset and the final character dataset.
 
 3. **Acquisition of personas for all characters**\
-Running the personas algorithm on more of the characters in our dataset to obtain a meaningful representation
-of the personas over time. 
+Running the personas algorithm from [Bamman et al., 2013](https://www.cs.cmu.edu/~dbamman/pubs/pdf/bamman+oconnor+smith.acl13.pdf) on more characters in our dataset to obtain a meaningful representation of the personas over time. 
 
 4. **Preliminary analysis**\
 Analysis of the proportion of women in the movie industrie per year.  
 Analysis of the age distribution of men vs women and the average age of both gender per year and comparison of the distributions using a Student t-test.
 
 5. **Personas analysis**\
-Extraction of the most attributed persona per year for men and women.
+Extraction of the most attributed persona per year to men and women.
 Analyse the evolution of the personas attributed to men and women over time.
+Study how varied are the personas associated to each gender.
 
-6. **Main vs Secondary Characters** \
+7. **Main vs Secondary Characters** \
 Determine the proportion of women in leading roles and its evolution.\
 TO BE COMPLETED BY JULIAN
 
-7. **Regression for representation**\
+8. **Regression for representation**\
 Regression analysis to predict when equal representation of women and men in movies will theoretically be reached according to the trends of the last century.
 
-8. **Genre Analysis**\
+9. **Genre Analysis**\
 Analysis of which personas are more present in different genres using an ANOVA test.
 Re-do previous analysis on data split by genre to see whether women's representation vary between genres
 
-9. **Characteristics of stereotypical women characters**\
+10. **Characteristics of stereotypical women characters**\
 Use clustering methods to find common factors that make a character fall into stereotypical personas.
 
 ## Proposed timeline
