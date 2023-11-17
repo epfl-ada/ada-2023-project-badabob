@@ -22,7 +22,7 @@ The following questions will help us to address this problematic:
 * Is the movie industry giving more important and leading roles to women?
 * To which character personas are women mostly attributed and does this evolve through time?
 * Which movie genres are more affected?
-* Does the observed trends apply to all ethnicities? For instance, does the representation of women only increases for white women? 
+* Do the observed trends apply to all ethnicities? For instance, does the representation of women only increase for white women? 
 
 ## Additional datasets
 
