@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import ast
-#from imdb import Cinemagoer
+from imdb import Cinemagoer
 import pandas as pd
 import nltk
 from nltk import pos_tag, word_tokenize
@@ -414,3 +414,22 @@ def plot_gender_ratio(gender_list_per_year):
 
     regression_results = linregress(gender_list_per_year['release_date'], gender_list_per_year['gender_ratio'])
     print(regression_results)
+
+
+def random_movies_per_year(group):
+    return group.sample(n=min(20, len(group)), random_state=10)
+
+################################## GENRES PREPROCESSING ################################################################
+
+
+def no_genres_in_list(genres, df):
+    ID_no_accepted_genre=[]
+    for index,row in df.iterrows():
+        ID=row['name']
+        genre=row['genre']
+        if all(element in genres for element in genre) and genre!=[]:
+            ID_no_accepted_genre.append(ID)
+    print("Number of movies : ",len(ID_no_accepted_genre))
+    return ID_no_accepted_genre
+
+
