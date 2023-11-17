@@ -11,6 +11,7 @@ But has this specific social movement bled into the entertainment industry? Has 
 century? Has their depiction progressed as important milestones in the Feminism movement were reached ? Or on the contrary,
 do women stereotypes still prevail in Hollywood ? 
 Simply put, is the entertainment industry a mirror of women's evolution in society?
+This information will enable us to understand how gender stereotypes in movies fluctuate with time and whether this representation is affected by major women’s rights events in the US (e.g. right to vote, etc. found on Wikipedia). 
 
 ## Table of Contents
 
@@ -22,13 +23,13 @@ Simply put, is the entertainment industry a mirror of women's evolution in socie
 6. [Questions for TAs](#questions-for-tas)
 
 ## Research questions
-**--> Research Questions: A list of research questions you would like to address during the project.**  
-How has the proportion of female actors in movies evolved over time? 
-Is the movie industry giving more important and leading roles to women? Do they have their own storylines or are just love interests?
-What types of adjectives are used in synopsis when describing women and to which character personas are women mostly attributed?
-Which movie genres are more affected?
-Do higher-grossing movies rely more on gender stereotypes than others?
-This information will enable us to understand how gender stereotypes in movies fluctuate with time and whether this representation is affected by major women’s rights events in the US (e.g. right to vote, etc. found on Wikipedia). 
+The main question we aim to adress is: how has women's representation evolved over time in movies and does it relate to historical events linked to women's history in the United States?
+The following questions will help us to address this problematic: 
+* How has the proportion of female actors in movies evolved over time? 
+* Is the movie industry giving more important and leading roles to women?
+* To which character personas are women mostly attributed and does this evolve through time?
+* Which movie genres are more affected?
+* Does the observed trends apply to all ethnicities? For instance, does the representation of women only increases for white women? 
 
 ## Additional datasets
 
@@ -63,10 +64,14 @@ unknown languages. One of our next step would be to find the language of these m
 [Cinemagoer](https://github.com/cinemagoer/cinemagoer). This can be done easily since Cinemagoer allows to research
 movies not only with IMDB IDs but also with movie titles.
 
-Another important variable that we need to complete is the personnas. We will not use another dataset to do so but run the 
+Another important variable that we need to complete is the personas. We will not use another dataset to do so but run the 
 pipeline described in [Bamman et al., 2013](https://www.cs.cmu.edu/~dbamman/pubs/pdf/bamman+oconnor+smith.acl13.pdf)
 using the [code of the authors](https://github.com/dbamman/ACL2013_Personas). This is expected to take a
 long time, so we will run it on a random subset of plot summaries for each year to reduce computational time.
+
+### C) Ethnicity
+Addtionally, we would like to study how the ethnicity of women play a role in their representation. 
+We will find the ethnicity of actors on wikipedia pages ['lists of actors by ethnicity](https://en.wikipedia.org/wiki/Category:Actors_by_ethnic_or_national_descent).
 
 ## Methods
 
@@ -77,17 +82,17 @@ Preliminary exploration of the dataset to get familiar with it. Pre-processing a
 2. **Data completion**\
 Completion of the dataset up until 2022 using IMDb to obtain the final movie dataset and the final character dataset.
 
-3. **Acquisition of personnas for all characters**\
-Running the personnas algorithm on more of the characters in our dataset to obtain a meaningful representation
-of the personnas over time. 
+3. **Acquisition of personas for all characters**\
+Running the personas algorithm on more of the characters in our dataset to obtain a meaningful representation
+of the personas over time. 
 
 4. **Preliminary analysis**\
 Analysis of the proportion of women in the movie industrie per year.  
 Analysis of the age distribution of men vs women and the average age of both gender per year and comparison of the distributions using a Student t-test.
 
-5. **Personnas analysis**\
-Extraction of the most attributed personna per year for men and women.
-Analyse the evolution of the personnas attributed to men and women over time.
+5. **Personas analysis**\
+Extraction of the most attributed persona per year for men and women.
+Analyse the evolution of the personas attributed to men and women over time.
 
 6. **Main vs Secondary Characters** \
 Determine the proportion of women in leading roles and its evolution.\
@@ -97,21 +102,17 @@ TO BE COMPLETED BY JULIAN
 Regression analysis to predict when equal representation of women and men in movies will theoretically be reached according to the trends of the last century.
 
 8. **Genre Analysis**\
-Analysis of which personnas are more present in different genres using an ANOVA test.
+Analysis of which personas are more present in different genres using an ANOVA test.
 Re-do previous analysis on data split by genre to see whether women's representation vary between genres
 
-9. **Analyze Box office revenue**\
-Look at the correlation between successful movies (high box office revenue) and women
-representation using Pearson correlation coefficient or linear regression.
-
-10. **Characteristics of stereotypical women characters**\
-Use clustering methods to find common factors that make a character fall into stereotypical personnas.
+9. **Characteristics of stereotypical women characters**\
+Use clustering methods to find common factors that make a character fall into stereotypical personas.
 
 ## Proposed timeline
 
 * 17/11/2023 - Preliminary data processing, data completion, first analysis of movies, characters and genres, implementation of natural language processing algorithm + ***Deliver Milestone 2***
-* 24/11/2023 - Preliminary analysis and obtain personnas for a larger set of characters and 
-* 01/12/2023 - Personnas analysis and implement regression for representation  + ***Deliver Homework 2***
+* 24/11/2023 - Preliminary analysis and obtain personas for a larger set of characters and 
+* 01/12/2023 - personas analysis and implement regression for representation  + ***Deliver Homework 2***
 * 08/12/2023 - Main vs Secondary character analysis and analysis by genre
 * 15/12/2023 - Data Story writing, web page design and characteristics of stereotypical women characters
 * 22/12/2023 - ***Deliver Milestone 3***
@@ -134,12 +135,12 @@ Use clustering methods to find common factors that make a character fall into st
     <td>Lucille Niederhauser </td>
     <td>Data completion<br>
         Time Line Analysis<br>
-        New personnas computation and analysis
+        New personas computation and analysis
     </td>
   </tr>
   <tr>
     <td>Victoria Rivet</td>
-    <td>Gender and personnas preliminary analysis<br>
+    <td>Gender and personas preliminary analysis<br>
         Regression analysis of actors' gender<br>
         Correlation of the results with historical events<br>
         Text for datastory
@@ -165,4 +166,5 @@ Use clustering methods to find common factors that make a character fall into st
 ## Questions for TAs
 
 1. Is it enough to deal with the increasing number of movies every year by normalizing by the number of movies we have in a 
-given year? 
+given year?
+2. We would also be interested in studying whether higher-grossing movies have a more or less stereotypical depiction of women. Do you have an idea on how we could correct the revenues for inflation? 
