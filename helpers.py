@@ -20,8 +20,87 @@ from fuzzywuzzy import fuzz, process
 import seaborn as sns
 import matplotlib.pyplot as plt
 from scipy.stats import linregress
+from SPARQLWrapper import SPARQLWrapper, JSON
+import time
 
 ######################################### COMPLEMENTING DATASETS #######################################################
+
+
+def wikipedia_query(save_file=True, save_path='DATA/', filename='wiki_queries.csv'):
+    """
+    Retrives IMDB, freebase ID  and title of movies on wikipedia. If the query crashes, the request is made again after
+    5s. for a maximal of 10 tries.
+    :param save_file: boolean: whether to save the created dataframe in a csv file, default = True
+    :param save_path: string: path where the data will be saved, default = 'DATA/'
+    :param filename: string: name of the file to save, default = 'wiki_queries.csv'
+    :return: a dataframe containing IMDB ID, freebase ID and title
+    """
+    # Call the wikidata query service
+    sparql = SPARQLWrapper("https://query.wikidata.org/sparql")
+
+    # Create the query
+    sparql.setQuery("""
+    SELECT ?work ?imdb_id ?freebase_id ?label
+    WHERE
+    {
+      ?work wdt:P31/wdt:P279* wd:Q11424.
+      ?work wdt:P345 ?imdb_id.
+      ?work wdt:P646 ?freebase_id.
+
+      OPTIONAL {
+        ?work rdfs:label ?label.
+      }
+
+      SERVICE wikibase:label { bd:serviceParam wikibase:language "en" }
+    }
+    """)
+
+    # Set the return format to JSON
+    sparql.setReturnFormat(JSON)
+
+    max_retries = 10
+    retry_delay = 5
+
+    for attempt in range(max_retries):
+        print(f'Attempt number {attempt + 1}')
+
+        try:
+            # Execute the query and convert results to a DataFrame
+            results = sparql.query().convert()
+            print('Wikipedia query successful')
+            bindings = results['results']['bindings']
+
+            # Extracting IMDb, Wikipedia, Freebase IDs, and labels
+            data = []
+            for binding in bindings:
+                row = {
+                    'work': binding['work']['value'] if 'work' in binding else None,
+                    'IMDB_ID': binding['imdb_id']['value'] if 'imdb_id' in binding else None,
+                    'freebase_ID': binding['freebase_id']['value'] if 'freebase_id' in binding else None,
+                    'label': binding['label']['value'] if 'label' in binding else None,
+                }
+                data.append(row)
+
+            # Create a DataFrame
+            wiki_df = pd.DataFrame(data)
+
+            # remove duplicates
+            wiki_df_filtered = wiki_df.drop_duplicates('IMDB_ID')
+            wiki_df_filtered = wiki_df_filtered.drop_duplicates('freebase_ID')
+
+            if save_file:
+                wiki_df_filtered.to_csv(save_path + filename, index=False)
+                print(f'file {save_path + filename} saved')
+
+            return wiki_df
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            if attempt < max_retries - 1:
+                print(f"Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+            else:
+                print("Max retries reached. Exiting.")
 
 
 def get_history_timeline(save_path='DATA/', file_name='timeline.csv'):
@@ -125,7 +204,7 @@ def get_IMDB_movies_data(IMDB_ids, save_path='DATA/', file_name='IMDB_movies_201
     years = []
     genres = []
     languages = []
-    i = 0
+    i = 1
 
     for id in IMDB_ids:
         try:
@@ -173,7 +252,7 @@ def filter_IMDB_movie_dataset(data):
     IMDB_data_us = data[data['countries'].str.contains('United States', case=False)].copy()
     IMDB_data_us_en = IMDB_data_us[IMDB_data_us['languages'].str.contains('English' or 'American Sign', case=False)].copy()
     # keep only movies from 2010-2022
-    IMDB_data_us_en = IMDB_data_us_en[(IMDB_data_us_en['release_date'] < 2023) & (IMDB_data_us_en['release_date'] > 2010)]
+    IMDB_data_us_en = IMDB_data_us_en[(IMDB_data_us_en['release_date'] < 2023)]
     # drop duplicates movie if any
     IMDB_data_us_en = IMDB_data_us_en.drop_duplicates(subset='IMDB_ID', keep='first')
 
@@ -211,46 +290,7 @@ def clean_IMDB_character_dataset(dataframe, IMDB_ids):
     return characters_data
 
 
-def merge_datasets_characters(characters_data, actors_data, movie_data):
-    """
-    Completes the character data with information from the actor data (left join). Then merges the resulting dataset with
-    information about the movie (left join with movie_data). Computes the age of the actors the year of the release
-    and renames columns tconst, nconst, characters, primaryName and birthYear into IMDB_ID, actor_IMDB_ID, character_name,
-    actor_name and actor_birthday respectively.
-    :param characters_data: pandas dataframe: should at least contain columns 'nconst' (character IMDB ID),
-    'tconst' (movie IMDB ID), 'characters' and 'ordering'
-    :param actors_data: pandas dataframe: should at least contain columns 'nconst' (character IMDB ID),
-    'primaryName' (actor name) and 'birthYear'
-    :param movie_data: pandas dataframe: should at least contain columns: 'genre', 'plot_summary', 'IMDB_ID'
-    :return: merged and formatted pandas dataframe
-    """
-
-    characters_data_merged = pd.merge(characters_data, actors_data, on='nconst', how='left').copy()
-
-    # remove columns we do not need in the character dataset
-    characters_movies_data = movie_data.drop(columns=['genre', 'plot_summary'])
-    characters_movies_data = characters_movies_data.rename(columns={'IMDB_ID': 'tconst'})
-
-    characters_data_final = pd.merge(characters_data_merged, characters_movies_data, on='tconst', how='left').copy()
-
-    # change columns name
-    characters_data_final = characters_data_final.rename(
-        columns={'tconst': 'IMDB_ID', 'nconst': 'actor_IMDB_ID', 'characters': 'character_name',
-                 'primaryName': 'actor_name', 'birthYear': 'actor_birthday'})
-
-    # compute actor age the year of the release
-    characters_data_final.loc[characters_data_final['actor_birthday'] == '\\N', 'actor_birthday'] = None
-    characters_data_final['actor_birthday'] = (characters_data_final['actor_birthday']).astype(float)
-    characters_data_final['actor_age'] = (
-                characters_data_final['release_date'] - (characters_data_final['actor_birthday']).astype(float))
-
-    # drop actor_birthday column
-    characters_data_final = characters_data_final.drop(columns='actor_birthday')
-
-    return characters_data_final.drop(columns='ordering')
-
-
-def remove_duplicated_columns(dataframe, columns_to_remove, col_to_keep='_x', col_to_delete='_y'):
+def remove_duplicated_columns(dataframe, columns_to_remove, col_to_keep='_y', col_to_delete='_x'):
     """
     Merge columns that are duplicated when performing an outer merge (col_name_x and col_name_y) by keeping
     col_name + col_to_keep if both columns do not contain NaNs or if col_name + col_to_delete contains NaN
@@ -269,6 +309,45 @@ def remove_duplicated_columns(dataframe, columns_to_remove, col_to_keep='_x', co
         dataframe = dataframe.rename(columns={col_name + col_to_keep: col_name})
 
     return dataframe
+
+
+def merge_datasets_characters(characters_data, actors_data, movie_data):
+    """
+    Completes the character data with information from the actor data (left join). Then merges the resulting dataset with
+    information about the movie (left join with movie_data). Computes the age of the actors the year of the release
+    and renames columns tconst, nconst, characters, primaryName and birthYear into IMDB_ID, actor_IMDB_ID, character_name,
+    actor_name and actor_birthday respectively.
+    :param characters_data: pandas dataframe: should at least contain columns 'nconst' (character IMDB ID),
+    'tconst' (movie IMDB ID), 'characters' and 'ordering'
+    :param actors_data: pandas dataframe: should at least contain columns 'nconst' (character IMDB ID),
+    'primaryName' (actor name) and 'birthYear'
+    :param movie_data: pandas dataframe: should at least contain columns: 'genre', 'plot_summary', 'IMDB_ID'
+    :return: merged and formatted pandas dataframe
+    """
+
+    characters_data_merged = pd.merge(characters_data, actors_data, on='nconst', how='left').copy()
+
+    # remove columns we do not need in the character dataset
+    characters_movies_data = movie_data.drop(columns=['genre', 'plot_summary', 'freebase_ID', 'wikipedia_ID'])
+    characters_data_merged = characters_data_merged.rename(columns={'tconst': 'IMDB_ID'})
+
+    characters_data_final = pd.merge(characters_data_merged, characters_movies_data, on='IMDB_ID', how='left').copy()
+
+    # change columns name
+    characters_data_final = characters_data_final.rename(
+        columns={'nconst': 'actor_IMDB_ID', 'characters': 'character_name',
+                 'primaryName': 'actor_name', 'birthYear': 'actor_birthday'})
+
+    # compute actor age the year of the release
+    characters_data_final.loc[characters_data_final['actor_birthday'] == '\\N', 'actor_birthday'] = None
+    characters_data_final['actor_birthday'] = (characters_data_final['actor_birthday']).astype(float)
+    characters_data_final['actor_age'] = (
+                characters_data_final['release_date'] - (characters_data_final['actor_birthday']).astype(float))
+
+    # drop actor_birthday column
+    characters_data_final = characters_data_final.drop(columns='actor_birthday')
+
+    return characters_data_final.drop(columns='ordering')
 
 
 def name_to_lowercase(dataframe, column_name):
@@ -318,7 +397,6 @@ def select_elligible_movies_for_main_char_analysis(movie_metadata,character_meta
 
     elligible_movies = elligible_movies[~elligible_movies['wikipedia_ID'].isin(movies_with_no_listed_char_wiki_ID)]
     elligible_movies = elligible_movies[~elligible_movies['IMDB_ID'].isin(movies_with_no_listed_char_imdb_ID)]
-
 
     id_types = ['wikipedia_ID','IMDB_ID']
     for id_type in id_types:
