@@ -28,28 +28,26 @@ import time
 
 def wikipedia_query(save_file=True, save_path='DATA/', filename='wiki_queries.csv'):
     """
-    Retrives IMDB, freebase ID  and title of movies on wikipedia. If the query crashes, the request is made again after
+    Retrieves IMDB, freebase ID  and revenue of movies on wikipedia. If the query crashes, the request is made again after
     5s. for a maximal of 10 tries.
     :param save_file: boolean: whether to save the created dataframe in a csv file, default = True
     :param save_path: string: path where the data will be saved, default = 'DATA/'
     :param filename: string: name of the file to save, default = 'wiki_queries.csv'
-    :return: a dataframe containing IMDB ID, freebase ID and title
+    :return: a dataframe containing IMDB ID, freebase ID and revenue
     """
     # Call the wikidata query service
     sparql = SPARQLWrapper("https://query.wikidata.org/sparql")
 
     # Create the query
     sparql.setQuery("""
-    SELECT ?work ?imdb_id ?freebase_id ?label
+    SELECT ?work ?imdb_id ?freebase_id ?revenue
     WHERE
     {
       ?work wdt:P31/wdt:P279* wd:Q11424.
       ?work wdt:P345 ?imdb_id.
-      ?work wdt:P646 ?freebase_id.
-
-      OPTIONAL {
-        ?work rdfs:label ?label.
-      }
+      
+      OPTIONAL {?work wdt:P2142 ?revenue.}
+      OPTIONAL {?work wdt:P646 ?freebase_id.}
 
       SERVICE wikibase:label { bd:serviceParam wikibase:language "en" }
     }
@@ -77,7 +75,7 @@ def wikipedia_query(save_file=True, save_path='DATA/', filename='wiki_queries.cs
                     'work': binding['work']['value'] if 'work' in binding else None,
                     'IMDB_ID': binding['imdb_id']['value'] if 'imdb_id' in binding else None,
                     'freebase_ID': binding['freebase_id']['value'] if 'freebase_id' in binding else None,
-                    'label': binding['label']['value'] if 'label' in binding else None,
+                    'box_office_revenue': binding['revenue']['value'] if 'revenue' in binding else None,
                 }
                 data.append(row)
 
@@ -85,14 +83,14 @@ def wikipedia_query(save_file=True, save_path='DATA/', filename='wiki_queries.cs
             wiki_df = pd.DataFrame(data)
 
             # remove duplicates
-            wiki_df_filtered = wiki_df.drop_duplicates('IMDB_ID')
-            wiki_df_filtered = wiki_df_filtered.drop_duplicates('freebase_ID')
+            wiki_df_filtered = wiki_df.drop_duplicates('IMDB_ID', keep='first')
+            #wiki_df_filtered = wiki_df_filtered.drop_duplicates('freebase_ID', keep='first')
 
             if save_file:
                 wiki_df_filtered.to_csv(save_path + filename, index=False)
                 print(f'file {save_path + filename} saved')
 
-            return wiki_df
+            return wiki_df_filtered
 
         except Exception as e:
             print(f"An error occurred: {e}")
