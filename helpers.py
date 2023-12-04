@@ -7,8 +7,6 @@ import nltk
 from nltk import pos_tag, word_tokenize
 from nltk.tokenize import sent_tokenize
 from nltk.corpus import stopwords
-nltk.download('stopwords')
-nltk.download('punkt')
 from tqdm import tqdm
 import re
 import string
@@ -22,6 +20,12 @@ import matplotlib.pyplot as plt
 from scipy.stats import linregress
 from SPARQLWrapper import SPARQLWrapper, JSON
 import time
+from nltk.corpus import stopwords
+nltk.download('maxent_ne_chunker')
+nltk.download('words')
+nltk.download('averaged_perceptron_tagger')
+nltk.download('stopwords')
+nltk.download('punkt')
 
 ######################################### COMPLEMENTING DATASETS #######################################################
 
@@ -540,4 +544,182 @@ def no_genres_in_list(genres, df):
     print("Number of movies : ",len(ID_no_accepted_genre))
     return ID_no_accepted_genre
 
+################################## PERSONAS PREPROCESSING ##############################################################
+
+def extract_words(df, id_col, char_name_col, to_extract):
+    tokens = pd.Series()
+    tagged_tokens = []
+    chunks_array = []
+    verbs_list = []
+    adjs_list = []
+    nouns_list = []
+    stop_words = set(stopwords.words('english'))
+    # Adding tags for verbs, adjectives, and nouns
+    verb_tags = ['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']
+    adj_tags = ['JJ', 'JJR', 'JJS']
+    noun_tags = ['NN', 'NNS', 'NNP', 'NNPS']
+
+    for index, row in tqdm(df.iterrows(), total=len(df), desc="Processing Movies"):
+        verbs = []
+        adjs = []
+        nouns = []
+        text = row[to_extract]
+        associated_w_text = row[char_name_col]
+        movie_id = row[id_col]
+
+        if type(text) == str:  # To only keep movies with a summary (ignoring NaN)
+            token = [word for word in nltk.word_tokenize(text) if word.lower() not in stop_words]  # Removing stopwords
+            tokens[associated_w_text] = token
+            tagged_tokens.append((movie_id, associated_w_text, nltk.pos_tag(token)))
+
+    for movie_id, associated_w_text, tagged_token in tqdm(tagged_tokens, desc="Processing Tokens", leave=False):
+        chunks_array.append((movie_id, associated_w_text, nltk.ne_chunk(tagged_token)))
+
+        verbs = []
+        adjs = []
+        nouns = []
+
+        # Categorize
+        for word, pos_tag in tagged_token:
+            if pos_tag in verb_tags:
+                verbs.append(word)
+            elif pos_tag in adj_tags:
+                adjs.append(word)
+            elif pos_tag in noun_tags:
+                nouns.append(word)
+
+        verbs_list.append((movie_id, associated_w_text, verbs))
+        adjs_list.append((movie_id, associated_w_text, adjs))
+        nouns_list.append((movie_id, associated_w_text, nouns))
+
+    # Returns lists of all verbs, adjectives, and nouns for each movie and raw chunks for each movie
+    return verbs_list, adjs_list, nouns_list, chunks_array
+
+def find_characters_genders_for_all_movies(movies_df, characters_df): # modify so you also return the full list of character names so that no need to redo fuzzy wory!
+    """
+    Finds the gender of characters for all movies in a dataframe
+    :param movies_df: pandas dataframe with movie information
+    :param characters_df: pandas dataframe with character information
+    :return result_df: pandas dataframe with IMDb ID, summary, and characters' genders for all movies
+    """
+    all_results = []
+
+    for _, movie_row in tqdm(movies_df.iterrows(), total=len(movies_df), desc="Processing Movies"):
+        # Check if the 'plot_summary' is a non-NaN value
+        if pd.notna(movie_row['plot_summary']):
+            IMDB_ID_character_list = characters_df.loc[characters_df['IMDB_ID'] == movie_row['IMDB_ID']]
+
+            genders = []
+            characters = []
+            summary_words = [word for word in word_tokenize(movie_row['plot_summary'].lower()) if word.isalnum()]  # Tokenize and exclude non-alphanumeric characters
+
+            # Set to keep track of already matched characters for the current movie and summary
+            matched_characters = set()
+
+            for word in summary_words:
+                closest_character, confidence, score = process.extractOne(word, IMDB_ID_character_list['character_name'])
+
+                if confidence > 50 and closest_character:  # Check confidence and non-empty character
+                    # Check if the character has already been matched for the current movie and summary
+                    if closest_character not in matched_characters:
+                        gender = IMDB_ID_character_list.loc[IMDB_ID_character_list['character_name'] == closest_character, 'actor_gender'].values
+                        if len(gender) > 0:
+                            characters.append(closest_character)
+                            genders.append(gender[0])
+
+                        # Add the matched character to the set for the current movie and summary
+                        matched_characters.add(closest_character)
+
+            result_df = pd.DataFrame({
+                'IMDB_ID': [movie_row['IMDB_ID']] * len(characters),
+                'plot_summary': [movie_row['plot_summary']] * len(characters),
+                'character_name': characters,
+                'gender': genders
+            })
+
+            all_results.append(result_df)
+
+    result_df = pd.concat(all_results, ignore_index=True)
+    return result_df
+
+
+def extract_context_strings(result_df):
+    """
+    Extracts context strings for each character in the DataFrame
+    :param result_df: pandas dataframe with IMDb ID, summary, characters, and genders
+    :return result_df_with_context: pandas dataframe with IMDb ID, summary, characters, genders, and context strings
+    """
+    result_df_with_context = result_df.copy()
+    stop_words = set(stopwords.words('english'))
+    # remove the stopwords to not extract them
+    result_df_with_context['plot_summary'] = result_df_with_context['plot_summary'].apply(
+        lambda x: ' '.join([word for word in x.split() if word.lower() not in stop_words]))
+    result_df_with_context['associated_words'] = ""
+
+    for _, row in tqdm(result_df_with_context.iterrows(), total=len(result_df_with_context),
+                       desc="Extracting Context Strings"):
+        character = row['character_name']
+        summary_words = [word for word in word_tokenize(row['plot_summary']) if word.isalnum()]
+
+        # Use fuzzy matching to find occurrences of the character name in the summary (non exact matches will also be found)
+        occurrences = [i for i, word in enumerate(summary_words) if process.extractOne(word, [character])[1] > 50]
+
+        # Extract context strings for each occurrence, 2 words before and 2 words after
+        context_strings = []
+        for occurrence in occurrences:
+            start_index = max(0, occurrence - 3)
+            end_index = min(len(summary_words), occurrence + 4)
+
+            # Exclude the matched word from the context string
+            matched_word = summary_words[occurrence]
+            context_string = " ".join(summary_words[start_index:end_index])
+            context_string = context_string.replace(matched_word, "")  # Remove the matched word
+            context_strings.append(context_string.strip())  # Strip leading and trailing spaces
+
+        # Concatenate context strings if there are multiple occurrences for the same character name
+        if len(context_strings) > 1:
+            context_string = " ".join(context_strings)
+        elif len(context_strings) == 1:
+            context_string = context_strings[0]
+        else:
+            context_string = ""
+
+        result_df_with_context.at[_, 'associated_words'] = context_string
+
+    return result_df_with_context
+
+def create_gender_dictionaries(df):
+    # Initialize dictionaries for male and female characters
+    male_dict = {'Verbs': [], 'Adjectives': [], 'Nouns': []}
+    female_dict = {'Verbs': [], 'Adjectives': [], 'Nouns': []}
+
+    # Iterate through the dataframe and populate dictionaries
+    for index, row in df.iterrows():
+        gender = row['gender']
+
+        # Check if the gender is male and handle empty lists
+        if gender == 'M':
+            male_dict['Verbs'].extend(row['Verbs']) if row['Verbs'] else None
+            male_dict['Adjectives'].extend(row['Adjectives']) if row['Adjectives'] else None
+            male_dict['Nouns'].extend(row['Nouns']) if row['Nouns'] else None
+
+        # Check if the gender is female and handle empty lists
+        elif gender == 'F':
+            female_dict['Verbs'].extend(row['Verbs']) if row['Verbs'] else None
+            female_dict['Adjectives'].extend(row['Adjectives']) if row['Adjectives'] else None
+            female_dict['Nouns'].extend(row['Nouns']) if row['Nouns'] else None
+
+    return male_dict, female_dict
+
+def calculate_word_frequencies(dictionary):
+    # Initialize a dictionary for each category (Verbs, Adjectives, Nouns)
+    frequencies = {'Verbs': {}, 'Adjectives': {}, 'Nouns': {}}
+
+    # Iterate through the dictionary and calculate word frequencies
+    for category, words in dictionary.items():
+        total_words = len(words)
+        word_counter = Counter(words)
+        frequencies[category] = {word: count / total_words for word, count in word_counter.items()}
+
+    return frequencies
 
