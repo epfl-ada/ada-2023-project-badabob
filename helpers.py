@@ -1,4 +1,5 @@
 import requests
+import numpy as np
 from bs4 import BeautifulSoup
 import ast
 from imdb import Cinemagoer
@@ -21,6 +22,9 @@ from scipy.stats import linregress
 from SPARQLWrapper import SPARQLWrapper, JSON
 import time
 from nltk.corpus import stopwords
+from sklearn.cluster import KMeans, DBSCAN
+from mpl_toolkits.mplot3d import Axes3D
+
 nltk.download('maxent_ne_chunker')
 nltk.download('words')
 nltk.download('averaged_perceptron_tagger')
@@ -360,6 +364,39 @@ def name_to_lowercase(dataframe, column_name):
     :return: panda dataframe with 'column_name' content in lower case
     """
     return [c.lower() if pd.notna(c) else c for c in dataframe[column_name]]
+
+
+def get_popularity_index(data, threshold=10):
+    """
+    Creates a popularity index for movies in the dataset. It is done by dividing the box-office revenue of each movie
+    for a year by the average of the 3 highest grossing movies the same year. This operation is only done on years that
+    have more than 10% of box-office values.
+    :param data: panda dataframe: data on used to compute the popularity index. Must contain the columns: 'release_date',
+    'box_office_revenue' and 'IMDB_ID'
+    :param threshold: int: minimal percentage of box-offices needed in one year in order to compute the popularity index
+    for this year.
+    :return:
+    """
+
+    # select years on which to compute popularity index
+    data_per_year = data.groupby('release_date').count()
+    fraction_box_office_per_year = data_per_year['box_office_revenue']*100/data_per_year['IMDB_ID']
+    box_office_years = fraction_box_office_per_year[fraction_box_office_per_year > threshold].index
+
+    # get average of 3 biggest box-office for each year
+    top_three_per_year = data.groupby('release_date')['box_office_revenue'].nlargest(3)
+    max_per_year = top_three_per_year.groupby('release_date').mean()
+
+    # compute popularity index
+    pop_index = []
+    for i in range(data.shape[0]):
+        year = data['release_date'][i]
+        if year in box_office_years:
+            pop_index.append(data['box_office_revenue'][i]/max_per_year[year])
+        else:
+            pop_index.append(None)
+
+    return pop_index
 
 
 ######################################### MAIN CHARACTER ANALYSIS ######################################################
@@ -723,3 +760,63 @@ def calculate_word_frequencies(dictionary):
 
     return frequencies
 
+
+######################################## CLUSTERING OF STEREOTYPICAL MOVIES ############################################
+
+
+def compute_difference_mean_ages(data):
+    female = data[data['actor_gender']=='F'].dropna(subset='actor_age')
+    male = data[data['actor_gender']=='M'].dropna(subset='actor_age')
+    female_per_movie = female.groupby('IMDB_ID')
+    male_per_movie = male.groupby('IMDB_ID')
+
+    mean_age_F = female_per_movie['actor_age'].mean()
+    mean_age_M = male_per_movie['actor_age'].mean()
+
+    df_mean_age_F = pd.DataFrame({'IMDB_ID': mean_age_F.index, 'mean_age_female': mean_age_F.values})
+    df_mean_age_M = pd.DataFrame({'IMDB_ID': mean_age_M.index, 'mean_age_male': mean_age_M.values})
+
+    mean_ages = pd.merge(df_mean_age_F, df_mean_age_M, on='IMDB_ID', how='outer')
+    mean_ages['difference_mean_ages'] = mean_ages['mean_age_female']-mean_ages['mean_age_male']
+
+    # removes aberrant data if present (negative means)
+    mean_ages = mean_ages[(mean_ages['mean_age_female']>0) & (mean_ages['mean_age_male']>0)]
+
+    return mean_ages
+
+
+def plot_sse(features_X, start=2, end=11):
+    sse = []
+    for k in range(start, end):
+        # Assign the labels to the clusters
+        kmeans = KMeans(n_clusters=k, random_state=10).fit(features_X)
+        sse.append({"k": k, "sse": kmeans.inertia_})
+
+    sse = pd.DataFrame(sse)
+    # Plot the data
+    plt.plot(sse.k, sse.sse)
+    plt.xlabel("K")
+    plt.ylabel("Sum of Squared Errors")
+
+
+def plot_kmeans_2d(data, labels, columns):
+    plt.scatter(data[columns[0]], data[columns[1]], c=labels, alpha=0.6, s=20)
+    plt.xlabel(columns[0])
+    plt.ylabel(columns[1])
+    plt.title('K-means clustering')
+    plt.show()
+
+
+def plot_kmeans_3d(data, labels, columns):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    x = np.array(data[columns[0]])
+    y = np.array(data[columns[1]])
+    z = np.array(data[columns[2]])
+    ax.set_xlabel(columns[0])
+    ax.set_ylabel(columns[1])
+    ax.set_zlabel(columns[2])
+
+    ax.scatter(x, y, z, marker="s", c=labels)
+
+    plt.show()
