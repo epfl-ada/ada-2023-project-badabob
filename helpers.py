@@ -92,7 +92,6 @@ def wikipedia_query(save_file=True, save_path='DATA/', filename='wiki_queries.cs
 
             # remove duplicates
             wiki_df_filtered = wiki_df.drop_duplicates('IMDB_ID', keep='first')
-            #wiki_df_filtered = wiki_df_filtered.drop_duplicates('freebase_ID', keep='first')
 
             if save_file:
                 wiki_df_filtered.to_csv(save_path + filename, index=False)
@@ -765,31 +764,46 @@ def calculate_word_frequencies(dictionary):
 
 
 def compute_difference_mean_ages(data):
-    female = data[data['actor_gender']=='F'].dropna(subset='actor_age')
-    male = data[data['actor_gender']=='M'].dropna(subset='actor_age')
+    """
+    Computes the difference of the mean age of female and the mean age of male for each movie in "data"
+    :param data: panda dataframe: contains data on characters, must contain at least the columns: actor_gender,
+    IMDB_ID and actor_age
+    :return: a panda dataframe containing for each movie its IMDB ID, the mean age of actresses, the mean age of actors
+    and the difference of these means
+    """
+
+    # separate male and female characters
+    female = data[data['actor_gender'] == 'F'].dropna(subset='actor_age')
+    male = data[data['actor_gender'] == 'M'].dropna(subset='actor_age')
     female_per_movie = female.groupby('IMDB_ID')
     male_per_movie = male.groupby('IMDB_ID')
 
+    # compute the mean ages for both genders
     mean_age_F = female_per_movie['actor_age'].mean()
     mean_age_M = male_per_movie['actor_age'].mean()
-
     df_mean_age_F = pd.DataFrame({'IMDB_ID': mean_age_F.index, 'mean_age_female': mean_age_F.values})
     df_mean_age_M = pd.DataFrame({'IMDB_ID': mean_age_M.index, 'mean_age_male': mean_age_M.values})
 
+    # create the final dataframe
     mean_ages = pd.merge(df_mean_age_F, df_mean_age_M, on='IMDB_ID', how='outer')
     mean_ages['difference_mean_ages'] = mean_ages['mean_age_female']-mean_ages['mean_age_male']
 
-    # removes aberrant data if present (negative means)
-    mean_ages = mean_ages[(mean_ages['mean_age_female']>0) & (mean_ages['mean_age_male']>0)]
+    # removes incoherent data if present (negative ages)
+    mean_ages = mean_ages[(mean_ages['mean_age_female'] > 0) & (mean_ages['mean_age_male'] > 0)]
 
     return mean_ages
 
 
 def plot_sse(features_X, start=2, end=11):
+    """
+    Plots the sum of the square error of the k-means clustering algorithm for values of k comprised in [start, end]
+    :param features_X: panda dataframe: features on which to perform k means clustering
+    :param start: int: start value of k to try
+    :param end: int: end value of k to try
+    """
     sse = []
     for k in range(start, end):
-        # Assign the labels to the clusters
-        kmeans = KMeans(n_clusters=k, random_state=10).fit(features_X)
+        kmeans = KMeans(n_clusters=k, random_state=10, n_init=10).fit(features_X)
         sse.append({"k": k, "sse": kmeans.inertia_})
 
     sse = pd.DataFrame(sse)
@@ -797,9 +811,18 @@ def plot_sse(features_X, start=2, end=11):
     plt.plot(sse.k, sse.sse)
     plt.xlabel("K")
     plt.ylabel("Sum of Squared Errors")
+    plt.title('Sum of squared errors of k-means clustering for different values of k')
+    plt.show()
 
 
 def plot_kmeans_2d(data, labels, columns):
+    """
+    Visualise a clustering in 2D by plotting the two columns "columns" of "data" and color coding the dots with the labels.
+    :param data: panda dataframe: the data that was clustered, must contain the columns "columns"
+    :param labels: numpy array of size data.shape[0]: contains the cluster number of each data point in data
+    :param columns: list of string, length = 2: contains the name of the two columns of data that we want to visualise.
+    The first element of the list will be plotted on the x-axis and the second on the y-axis.
+    """
     plt.scatter(data[columns[0]], data[columns[1]], c=labels, alpha=0.6, s=20)
     plt.xlabel(columns[0])
     plt.ylabel(columns[1])
@@ -808,6 +831,12 @@ def plot_kmeans_2d(data, labels, columns):
 
 
 def plot_kmeans_3d(data, labels, columns):
+    """
+    Visualise a clustering in 3D by plotting the 3 columns "columns" of "data" and color coding the dots with the labels.
+    :param data: panda dataframe: the data that was clustered, must contain the columns "columns"
+    :param labels: numpy array of size data.shape[0]: contains the cluster number of each data point in data
+    :param columns: list of string, length = 3: contains the name of the three columns of data that we want to visualise.
+    """
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     x = np.array(data[columns[0]])
@@ -820,3 +849,45 @@ def plot_kmeans_3d(data, labels, columns):
     ax.scatter(x, y, z, marker="s", c=labels)
 
     plt.show()
+
+
+def bootstrap_ci_stereotypical_movies(data, num_iterations=1000, alpha=0.05):
+    fraction_stereo_lower = []
+    fraction_stereo_upper = []
+    fraction_not_stereo_lower = []
+    fraction_not_stereo_upper = []
+
+    for decade, decade_data in data.groupby('decade'):
+        n = len(decade_data)
+        fraction_stereo = []
+        fraction_not_stereo = []
+
+        for i in range(num_iterations):
+            bootstrap_sample_indices = np.random.choice(n, size=n, replace=True)
+            bootstrap_sample = decade_data.iloc[bootstrap_sample_indices]
+
+            not_stereotypical_ids = bootstrap_sample[(bootstrap_sample['cluster_index'] == 0)]['IMDB_ID']
+            stereotypical_ids = bootstrap_sample[(bootstrap_sample['cluster_index'] == 1)]['IMDB_ID']
+
+            fraction_stereo.append(len(stereotypical_ids) / n)
+            fraction_not_stereo.append(len(not_stereotypical_ids) / n)
+
+        fraction_not_stereo = np.array(fraction_not_stereo)
+        fraction_stereo = np.array(fraction_stereo)
+
+        lower_bound_stereo = np.percentile(fraction_stereo, (alpha / 2) * 100)
+        upper_bound_stereo = np.percentile(fraction_stereo, (1 - alpha / 2) * 100)
+        lower_bound_not_stereo = np.percentile(fraction_not_stereo, (alpha / 2) * 100)
+        upper_bound_not_stereo = np.percentile(fraction_not_stereo, (1 - alpha / 2) * 100)
+
+        fraction_stereo_lower.append(lower_bound_stereo)
+        fraction_stereo_upper.append(upper_bound_stereo)
+        fraction_not_stereo_lower.append(lower_bound_not_stereo)
+        fraction_not_stereo_upper.append(upper_bound_not_stereo)
+
+    return (
+        np.array(fraction_stereo_lower),
+        np.array(fraction_stereo_upper),
+        np.array(fraction_not_stereo_lower),
+        np.array(fraction_not_stereo_upper)
+    )
