@@ -594,7 +594,7 @@ def extract_words(df, id_col, char_name_col, to_extract):
     # Adding tags for verbs, adjectives, and nouns
     verb_tags = ['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']
     adj_tags = ['JJ', 'JJR', 'JJS']
-    noun_tags = ['NN', 'NNS', 'NNP', 'NNPS']
+    noun_tags = ['NN', 'NNS'] # We do not take NNPs and NNP because they are names and we do not want to include names in our analysis
 
     for index, row in tqdm(df.iterrows(), total=len(df), desc="Processing Movies"):
         verbs = []
