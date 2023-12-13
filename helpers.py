@@ -726,24 +726,31 @@ def extract_context_strings(result_df):
 
 def create_gender_dictionaries(df):
     # Initialize dictionaries for male and female characters
-    male_dict = {'Verbs': [], 'Adjectives': [], 'Nouns': []}
-    female_dict = {'Verbs': [], 'Adjectives': [], 'Nouns': []}
+    male_dict = {}
+    female_dict = {}
 
     # Iterate through the dataframe and populate dictionaries
     for index, row in df.iterrows():
-        gender = row['gender']
+        gender = row['actor_gender']
+        decade = row['decade'] # we want the create a ductionnary per decade to later analyze
 
-        # Check if the gender is male and handle empty lists
+        # Check if the gender is male and handle empty lists (characters don't necessarily have words of the 3 cat. associated to them
         if gender == 'M':
-            male_dict['Verbs'].extend(row['Verbs']) if row['Verbs'] else None
-            male_dict['Adjectives'].extend(row['Adjectives']) if row['Adjectives'] else None
-            male_dict['Nouns'].extend(row['Nouns']) if row['Nouns'] else None
+            if decade not in male_dict:
+                male_dict[decade] = {'Verbs': [], 'Adjectives': [], 'Nouns': []} # create a dict per decade
+
+            male_dict[decade]['Verbs'].extend(row['Verbs']) if row['Verbs'] else None
+            male_dict[decade]['Adjectives'].extend(row['Adjectives']) if row['Adjectives'] else None
+            male_dict[decade]['Nouns'].extend(row['Nouns']) if row['Nouns'] else None
 
         # Check if the gender is female and handle empty lists
         elif gender == 'F':
-            female_dict['Verbs'].extend(row['Verbs']) if row['Verbs'] else None
-            female_dict['Adjectives'].extend(row['Adjectives']) if row['Adjectives'] else None
-            female_dict['Nouns'].extend(row['Nouns']) if row['Nouns'] else None
+            if decade not in female_dict:
+                female_dict[decade] = {'Verbs': [], 'Adjectives': [], 'Nouns': []}
+
+            female_dict[decade]['Verbs'].extend(row['Verbs']) if row['Verbs'] else None
+            female_dict[decade]['Adjectives'].extend(row['Adjectives']) if row['Adjectives'] else None
+            female_dict[decade]['Nouns'].extend(row['Nouns']) if row['Nouns'] else None
 
     return male_dict, female_dict
 
@@ -759,7 +766,114 @@ def calculate_word_frequencies(dictionary):
 
     return frequencies
 
+# Function to apply stemming to a list of words with a progress bar
+def stem_words_with_progress(word_list):
+    stemmer = PorterStemmer()
+    stemmed_words = []
+    for word in word_list:
+        stemmed_words.append(stemmer.stem(word))
+    return stemmed_words
 
+def subtract_frequencies(frequencies_1, frequencies_2): 
+    subtracted_frequencies = {}
+    words_only_in_freq1 = {}
+    words_only_in_freq2 = {}
+
+    for decade in frequencies_1.keys():
+        subtracted_frequencies[decade] = {'Verbs': {}, 'Adjectives': {}, 'Nouns': {}}
+        words_only_in_freq1[decade] = {'Verbs': {}, 'Adjectives': {}, 'Nouns': {}}
+        words_only_in_freq2[decade] = {'Verbs': {}, 'Adjectives': {}, 'Nouns': {}}
+
+        for category in frequencies_1[decade].keys():
+            common_words = set(frequencies_1[decade][category].keys()) & set(frequencies_2[decade][category].keys())
+
+            for word in common_words:
+                freq_1 = frequencies_1[decade][category].get(word, 0)
+                freq_2 = frequencies_2[decade][category].get(word, 0)
+                subtracted_frequencies[decade][category][word] = freq_1 - freq_2
+
+            remaining_words_1 = set(frequencies_1[decade][category].keys()) - common_words
+            remaining_words_2 = set(frequencies_2[decade][category].keys()) - common_words
+
+            for word in remaining_words_1:
+                subtracted_frequencies[decade][category][word] = frequencies_1[decade][category][word]
+                words_only_in_freq1[decade][category][word] = frequencies_1[decade][category][word]
+
+            for word in remaining_words_2:
+                subtracted_frequencies[decade][category][word] = -frequencies_2[decade][category][word]
+                words_only_in_freq2[decade][category][word] = frequencies_2[decade][category][word]
+
+    return subtracted_frequencies, words_only_in_freq1, words_only_in_freq2
+
+def plot_rel_freq_per_decade(relative_frequencies, categories):
+    # Create subplots for each category
+    decades = relative_frequencies.keys()
+    num_categories = len(categories)
+
+    fig, axs = plt.subplots(len(decades), num_categories, figsize=(5 * num_categories, 3 * len(decades)))
+
+    # Iterate through each decade
+    for i, decade in enumerate(decades):
+        for j, category in enumerate(categories):
+            # Get the top words and their frequencies
+            top_words_positive = [word for _, word in sorted(
+                zip(relative_frequencies[decade][category].values(), relative_frequencies[decade][category].keys()),
+                key=lambda x: x[0],
+                reverse=True
+            )[:5]]
+
+            top_words_negative = [word for _, word in sorted(
+                zip(relative_frequencies[decade][category].values(), relative_frequencies[decade][category].keys()),
+                key=lambda x: x[0]
+            )[:5]]
+
+            top_words = top_words_positive + top_words_negative
+            top_frequencies = [relative_frequencies[decade][category][word] for word in top_words]
+
+            # Plot the bar chart for each category
+            bars = axs[i, j].bar(top_words, top_frequencies, color=['skyblue' if freq >= 0 else 'pink' for freq in top_frequencies])
+            axs[i, j].set_title(f'{category} {decade}')
+            axs[i, j].set_ylabel('Relative frequencies: Male - Female')
+
+            # Rotate x-axis tick labels
+            axs[i, j].set_xticklabels(top_words, rotation=45, ha='right')
+
+    # Adjust layout and show the plots
+    plt.tight_layout()
+    plt.show()
+    
+    
+def plot_top_words_per_decade(frequencies, categories, col = "blue"):
+    # Create subplots for each category
+    decades = frequencies.keys()
+    num_categories = len(categories)
+
+    fig, axs = plt.subplots(len(decades), num_categories, figsize=(5 * num_categories, 3 * len(decades)))
+
+    # Iterate through each decade
+    for i, decade in enumerate(decades):
+        for j, category in enumerate(categories):
+            # Get the top words and their frequencies
+            top_words = [word for _, word in sorted(
+                zip(frequencies[decade][category].values(), frequencies[decade][category].keys()),
+                key=lambda x: x[0],
+                reverse=True
+            )[:5]]
+
+            top_frequencies = [frequencies[decade][category][word] for word in top_words]
+
+            # Plot the bar chart for each category
+            bars = axs[i, j].bar(top_words, top_frequencies, color=col)
+            axs[i, j].set_title(f'{category} {decade}')
+            axs[i, j].set_ylabel('Absolute Frequency Difference')
+
+            # Rotate x-axis tick labels
+            axs[i, j].set_xticklabels(top_words, rotation=45, ha='right')
+
+    # Adjust layout and show the plots
+    plt.tight_layout()
+    plt.show()
+    
 ######################################## CLUSTERING OF STEREOTYPICAL MOVIES ############################################
 
 
