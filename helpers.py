@@ -874,6 +874,19 @@ def plot_top_words_per_decade(frequencies, categories, col = "blue"):
     plt.tight_layout()
     plt.show()
     
+def subset_df(df, genre):
+    df_subset_genre = df[df['genre'].str.len() > 0]
+    df_subset_genre = df_subset_genre[df_subset_genre['genre'].apply(lambda x: genre in x)]
+    return df_subset_genre
+
+def plot_by_genre(genre,df):
+    df_subset_genre=subset_df(df, genre)
+    male_dict_genre,female_dict_genre=create_gender_dictionaries(df_subset_genre)
+    male_frequencies_per_decade_genre  = calculate_word_frequencies(male_dict_genre)
+    female_frequencies_per_decade_genre = calculate_word_frequencies(female_dict_genre)
+    relative_frequencies_genre, unique_male_genre, unique_female_genre = subtract_frequencies(male_frequencies_per_decade_genre, female_frequencies_per_decade_genre)
+    plot_rel_freq_per_decade(relative_frequencies_genre, ['Verbs', 'Adjectives', 'Nouns'])
+    
 ######################################## CLUSTERING OF STEREOTYPICAL MOVIES ############################################
 
 
