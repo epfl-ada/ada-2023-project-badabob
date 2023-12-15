@@ -979,6 +979,18 @@ def plot_kmeans_3d(data, labels, columns):
 
 
 def bootstrap_ci_stereotypical_movies(data, num_iterations=1000, alpha=0.05):
+    """
+    Computes the confidence interval of the proportion of stereotypical and not-stereotypical movies per decade using
+    bootstrap.
+    :param data: panda dataframe: movie data used to compute the CIs, must contain the columns IMDB_ID, decade
+    and cluster_index. A movie with cluster index of 0 is considered as non-stereotypical. A movie with cluster index
+    of 1 is considered as stereotypical.
+    :param num_iterations: int: the number of re-sampling done for the bootstrap, default = 1000.
+    :param alpha: float: the level of significance of the confidence interval, default = 0.05.
+    :return: CI lower bound for stereotypical movies, CI upper bound for stereotypical movies,
+    CI lower bound for non-stereotypical movies, CI upper bound for non-stereotypical movies
+    """
+
     fraction_stereo_lower = []
     fraction_stereo_upper = []
     fraction_not_stereo_lower = []
@@ -1018,3 +1030,6 @@ def bootstrap_ci_stereotypical_movies(data, num_iterations=1000, alpha=0.05):
         np.array(fraction_not_stereo_lower),
         np.array(fraction_not_stereo_upper)
     )
+
+
+
