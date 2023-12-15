@@ -529,35 +529,45 @@ def calculate_gender_ratio(genders:list):
     """
     Calculates the female to male gender ratio in a list of strings
     containing ['M'] and ['F']
-    :param genders: list of strings
+    :param genders: list
     :return ratio: float
     """
-    flat_list = [gender for sublist in genders for gender in sublist]
-    genders = [gender for gender in flat_list if gender in ['F', 'M']]
-    nb_females = sum(1 for gender in genders if gender == 'F')
+
     if len(genders) == 0:
-        return float('nan')
+        return pd.NA
+    
+    nb_females = sum(1 for gender in genders if gender == 'F')
+
     return nb_females/len(genders)
 
 
-def plot_gender_ratio(gender_list_per_year):
+def plot_gender_ratio(movies):
     """
     Plots the female to male gender ratio across time in years
     :param gender_list_per_year: pandas dataframe
     """
+    movies['gender_ratio'] = movies['main character genders'].apply(calculate_gender_ratio)
+    movies = movies.dropna(subset=['gender_ratio'])
+
+    ratio_data = movies[["decade","gender_ratio"]]
+
+    ratio_means = ratio_data.groupby('decade').mean().reset_index()
+    ratio_means['gender_ratio'] = pd.to_numeric(ratio_means['gender_ratio'], errors='coerce')
+    ratio_stds = ratio_data.groupby('decade').std().reset_index()
+
     plt.figure(figsize=(10, 6))
     sns.set(style='whitegrid')
-    sns.lineplot(x=gender_list_per_year['release_date'], y=gender_list_per_year['gender_ratio'], linewidth=2.5, alpha=0.8)
-    sns.regplot(x=gender_list_per_year['release_date'], y=gender_list_per_year['gender_ratio'], scatter=False, color='red',label="Linear Regression, bootstrap, 95% Conf. Int.",ci=95)
 
-    plt.xlabel('Movie release year')
+    sns.lineplot(x=ratio_means['decade'], y=ratio_means['gender_ratio'], linewidth=2.5, alpha=0.8)
+
+    plt.xlabel('Movie release decade')
     plt.ylabel('Female/Male ratio')
     plt.title('Gender ratio in main characters over time')
     plt.legend()
-    plt.show()
 
-    regression_results = linregress(gender_list_per_year['release_date'], gender_list_per_year['gender_ratio'])
-    print(regression_results)
+    plt.fill_between(ratio_stds['decade'], ratio_means['gender_ratio'] - ratio_stds['gender_ratio'], 
+                     y2 = ratio_means['gender_ratio'] + ratio_stds['gender_ratio'],alpha=0.2)
+    plt.show()
 
 
 def random_movies_per_year(group):
