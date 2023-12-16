@@ -24,6 +24,9 @@ import time
 from nltk.corpus import stopwords
 from sklearn.cluster import KMeans, DBSCAN
 from mpl_toolkits.mplot3d import Axes3D
+import plotly.graph_objects as go
+import plotly.express as px
+import io
 
 nltk.download('maxent_ne_chunker')
 nltk.download('words')
@@ -1042,4 +1045,345 @@ def bootstrap_ci_stereotypical_movies(data, num_iterations=1000, alpha=0.05):
     )
 
 
+########################## PLOT PROPORTIONS AND AGES ###################################################################
+def create_plot_male_female(character_data):
+
+    character_data_grouped_by_decade = character_data.groupby(character_data['decade'])
+
+    proportion_female = character_data_grouped_by_decade['actor_gender'].apply(lambda x: (x == 'F').sum() / len(x))
+    proportion_male = 1 - proportion_female
+
+    # Create a DataFrame
+    data_for_plotting = pd.DataFrame({
+        'Male': proportion_male,
+        'Female': proportion_female})
+
+    # Create traces for male and female bars
+    plot_male = go.Bar(x=data_for_plotting.index, y=data_for_plotting['Male'], name='Male actors',
+                       marker=dict(color='mediumturquoise'))
+    plot_female = go.Bar(x=data_for_plotting.index, y=data_for_plotting['Female'], name='Female actors',
+                         marker=dict(color='hotpink'))
+
+    return plot_male, plot_female
+
+def subplot_proportion_men_women_per_decade(character_data, idx, subplot):
+
+    plot_male, plot_female = create_plot_male_female(character_data)
+
+    if idx != 1:
+        plot_male.update(dict(showlegend=False))
+        plot_female.update(dict(showlegend=False))
+    subplot.append_trace(plot_female, row=idx%2+1, col=idx%3+1)
+    subplot.append_trace(plot_male, row=idx%2+1, col=idx%3+1)
+
+
+def plot_proportion_men_women_per_decade(character_data, save_fig=True, show_fig_png=True, folder=''):
+    """
+    This function displays an interactive graph using plotly of the proportion of men vs women characters over decades.
+    :param character_data: the data to be plotted in a dataframe. Assuming there is a column "decade"
+    as well as a column "actor_gender
+    :param save_fig: if true, the interactive plot will be saved in an HTML file
+    :param show_fig_png: if true, the fig is displayed as a PNG (used for github display), else the figure is displayed
+    as an interactive graph
+    :return: no return, the plot is displayed
+    """
+
+    plot_male, plot_female = create_plot_male_female(character_data)
+
+    # Create layout
+    layout = go.Layout(
+        title='Proportion of Men vs Women in Movies per Decade',
+        xaxis=dict(title='Decade'),
+        yaxis=dict(title='Proportion of total actors'),
+        barmode='stack'
+    )
+
+    # Create figure
+    fig = go.Figure(data=[plot_female, plot_male], layout=layout)
+
+    if save_fig:
+        fig.write_html(folder+"Proportion of Men vs Women in Movies per Decade", auto_open=True)
+    if show_fig_png:
+        fig.show("png")
+    else:
+        fig.show()
+
+def subplot_proportion_movies_different_percentages_women(character_data, idx, subplot):
+    """
+    This function plots the proportion of movies across decades that have less that 25% of women in them,
+    between 25-50%, between 50-75% and more than 75%
+    :param character_data: the data stored in a dataframe. This function assumes there is a column "decade"
+    as well as a "name" for the movies and "actor gender"
+    :param save_fig: if true, the interactive plot will be saved in an HTML file
+    :param show_fig_png: if true, the fig is displayed as a PNG (used for github display), else the figure is displayed
+    as an interactive graph
+    :return: no return, the plot is displayed
+    """
+    # group by decade:
+    character_data_grouped_by_decade = character_data.groupby(character_data['decade'])
+
+    # group by decade and by movie
+    characters_grouped_by_decade_and_movie = character_data.groupby(['decade', 'name'])
+
+    # Calculate the proportion of men and women per year per movie
+    proportion_female_per_movie = \
+        characters_grouped_by_decade_and_movie['actor_gender'].apply(lambda x: (x == 'F').sum() / len(x))
+
+    # Convert the Series to a DataFrame for easier data handling in later analysis
+    female_proportions = proportion_female_per_movie.reset_index()
+
+    # Rename the columns if needed
+    female_proportions.columns = ['decade', 'name', 'proportion_female']
+
+    #Lists to store in which category each movie belongs to per year
+    below_25_per_decade = []
+    quarter_50_per_decade = []
+    half_75_per_decade = []
+    above_75_per_decade = []
+
+    # Iterate through each year in the index of female_proportions
+    for decade, proportions in female_proportions.groupby('decade'):
+        # Count movies in different categories for the current decade
+        below_25 = len(proportions[proportions['proportion_female'] <= 0.25])
+        quarter_50 = len(proportions[(proportions['proportion_female'] > 0.25) &
+                                     (proportions['proportion_female'] <= 0.5)])
+        half_75 = len(proportions[(proportions['proportion_female'] > 0.5) &
+                                  (proportions['proportion_female'] <= 0.75)])
+        above_75 = len(proportions[proportions['proportion_female'] > 0.75])
+
+        # Calculate proportions for each category
+        total_movies = len(proportions)
+        proportion_below_25 = below_25 / total_movies
+        proportion_quarter_50 = quarter_50 / total_movies
+        proportion_half_75 = half_75 / total_movies
+        proportion_above_75 = above_75 / total_movies
+
+        # Append proportions to respective lists
+        below_25_per_decade.append(proportion_below_25)
+        quarter_50_per_decade.append(proportion_quarter_50)
+        half_75_per_decade.append(proportion_half_75)
+        above_75_per_decade.append(proportion_above_75)
+
+        # Extract unique decades
+    unique_decades = female_proportions['decade'].unique()
+
+    categories = ['Below 25%', '25-50%', '50-75%', 'Above 75%']
+    data = [below_25_per_decade, quarter_50_per_decade, half_75_per_decade, above_75_per_decade]
+
+    for i, category in enumerate(categories):
+        trace = go.Scatter(
+            x=unique_decades,
+            y=data[i],
+            mode='lines',
+            stackgroup='one',
+            name=category
+        )
+        if idx != 0:
+            subplot.update_layout(showlegend=False)
+        subplot.append_trace(trace, row=idx%2+1, col=idx%3+1)
+
+
+
+
+def plot_proportion_movies_different_percentages_women(character_data, save_fig=True, show_fig_png=True, folder=''):
+    """
+    This function plots the proportion of movies across decades that have less that 25% of women in them,
+    between 25-50%, between 50-75% and more than 75%
+    :param character_data: the data stored in a dataframe. This function assumes there is a column "decade"
+    as well as a "name" for the movies and "actor gender"
+    :param save_fig: if true, the interactive plot will be saved in an HTML file
+    :param show_fig_png: if true, the fig is displayed as a PNG (used for github display), else the figure is displayed
+    as an interactive graph
+    :return: no return, the plot is displayed
+    """
+    # group by decade:
+    character_data_grouped_by_decade = character_data.groupby(character_data['decade'])
+
+    # group by decade and by movie
+    characters_grouped_by_decade_and_movie = character_data.groupby(['decade', 'name'])
+
+    # Calculate the proportion of men and women per year per movie
+    proportion_female_per_movie = \
+        characters_grouped_by_decade_and_movie['actor_gender'].apply(lambda x: (x == 'F').sum() / len(x))
+
+    # Convert the Series to a DataFrame for easier data handling in later analysis
+    female_proportions = proportion_female_per_movie.reset_index()
+
+    # Rename the columns if needed
+    female_proportions.columns = ['decade', 'name', 'proportion_female']
+
+    #Lists to store in which category each movie belongs to per year
+    below_25_per_decade = []
+    quarter_50_per_decade = []
+    half_75_per_decade = []
+    above_75_per_decade = []
+
+    # Iterate through each year in the index of female_proportions
+    for decade, proportions in female_proportions.groupby('decade'):
+        # Count movies in different categories for the current decade
+        below_25 = len(proportions[proportions['proportion_female'] <= 0.25])
+        quarter_50 = len(proportions[(proportions['proportion_female'] > 0.25) &
+                                     (proportions['proportion_female'] <= 0.5)])
+        half_75 = len(proportions[(proportions['proportion_female'] > 0.5) &
+                                  (proportions['proportion_female'] <= 0.75)])
+        above_75 = len(proportions[proportions['proportion_female'] > 0.75])
+
+        # Calculate proportions for each category
+        total_movies = len(proportions)
+        proportion_below_25 = below_25 / total_movies
+        proportion_quarter_50 = quarter_50 / total_movies
+        proportion_half_75 = half_75 / total_movies
+        proportion_above_75 = above_75 / total_movies
+
+        # Append proportions to respective lists
+        below_25_per_decade.append(proportion_below_25)
+        quarter_50_per_decade.append(proportion_quarter_50)
+        half_75_per_decade.append(proportion_half_75)
+        above_75_per_decade.append(proportion_above_75)
+
+        # Extract unique decades
+    unique_decades = female_proportions['decade'].unique()
+
+    # Create traces for stack plot
+    traces = []
+    categories = ['Below 25%', '25-50%', '50-75%', 'Above 75%']
+    data = [below_25_per_decade, quarter_50_per_decade, half_75_per_decade, above_75_per_decade]
+
+    for i, category in enumerate(categories):
+        trace = go.Scatter(
+            x=unique_decades,
+            y=data[i],
+            mode='lines',
+            stackgroup='one',
+            name=category
+        )
+        traces.append(trace)
+
+    # Create layout
+    layout = go.Layout(
+        title='Proportion of Movies with Different Percentages of Female Actors',
+        xaxis=dict(title='Decade'),
+        yaxis=dict(title='Proportion of movies in a given decade'),
+        legend=dict(x=1.05, y=1, traceorder='normal', orientation='v')
+    )
+
+    # Create figure
+    fig = go.Figure(data=traces, layout=layout)
+
+    # Show the interactive plot
+    if save_fig:
+        fig.write_html(folder+ "Proportion of Movies with Different Percentages of Female Actors", auto_open=True)
+    if show_fig_png:
+        fig.show("png")
+    else:
+        fig.show()
+
+
+def plot_average_age_actor_across_decades(character_data,save_fig=True,show_fig_png=True, folder=''):
+    """
+    This function plots the average age of female and male actors across decades along with their 95% CI
+    :param character_data: the data stored in a dataframe. This function assumes there is a column "actor_age" as well as "actor_gender" and "decade"
+    :param save_fig: if true, the interactive plot will be saved in an HTML file
+    :param show_fig_png: if true, the fig is displayed as a PNG (used for github display), else the figure is displayed as an interactive graph
+    :return: no return, the plot is displayed
+    """
+    # drop the actors with NaN as age but also actors with negative ages (which appeared in 1910)
+    character_age = character_data.dropna(subset=['actor_age']).copy()
+    character_age = character_age[character_age['actor_age'] >= 0] # remove actors with a negative age
+    # Group by decade and gender
+    characters_age_by_decade_gender = character_age.groupby(['decade', 'actor_gender'])
+
+    # Calculate average age and standard deviation of age for each gender per year
+    gender_age_stats_per_decade = characters_age_by_decade_gender['actor_age'].agg(['mean', 'sem'])
+
+    # Reset the index to make the grouped columns accessible for further analysis or visualization
+    gender_age_stats_per_decade.reset_index(inplace=True)
+
+    # Filter data for men and women
+    men_data = gender_age_stats_per_decade[gender_age_stats_per_decade['actor_gender'] == 'M'].copy()
+    women_data = gender_age_stats_per_decade[gender_age_stats_per_decade['actor_gender'] == 'F'].copy()
+
+    # Calculate 95% confidence interval for men
+    men_data['lower_bound'] = men_data['mean'] - 1.96 * men_data['sem']
+    men_data['upper_bound'] = men_data['mean'] + 1.96 * men_data['sem']
+
+    # Calculate 95% confidence interval for women
+    women_data['lower_bound'] = women_data['mean'] - 1.96 * women_data['sem']
+    women_data['upper_bound'] = women_data['mean'] + 1.96 * women_data['sem']
+
+    #plot the plot with plotly to have an interactive plot
+    fig = go.Figure([
+        go.Scatter(
+            name='Men Mean Age',
+            x=men_data['decade'],
+            y=men_data['mean'],
+            mode='lines',
+            line=dict(color='mediumturquoise'),
+        ),
+        go.Scatter(
+            name='Upper Bound',
+            x = men_data['decade'],
+            y = men_data['upper_bound'],
+            mode='lines',
+            marker=dict(color="#444"),
+            line=dict(width=0),
+            showlegend=False
+        ),
+        go.Scatter(
+            name='Lower Bound',
+            x=men_data['decade'],
+            y=men_data['lower_bound'],
+            marker=dict(color="#444"),
+            line=dict(width=0),
+            mode='lines',
+            fillcolor='rgba(173, 216, 230, 0.3)',
+            fill='tonexty',
+            showlegend=False
+        ),
+        go.Scatter(
+            name='Women Mean Age',
+            x=women_data['decade'],
+            y=women_data['mean'],
+            mode='lines',
+            line=dict(color='hotpink'),
+        ),
+        go.Scatter(
+            name='Upper Bound',
+            x = women_data['decade'],
+            y = women_data['upper_bound'],
+            mode='lines',
+            marker=dict(color="#444"),
+            line=dict(width=0),
+            showlegend=False
+        ),
+        go.Scatter(
+            name='Lower Bound',
+            x=women_data['decade'],
+            y=women_data['lower_bound'],
+            marker=dict(color="#444"),
+            line=dict(width=0),
+            mode='lines',
+            fillcolor='rgba(255, 182, 193, 0.3)',
+            fill='tonexty',
+            showlegend=False
+        )
+    ])
+
+    # Create figure
+    fig.update_layout(
+        yaxis_title='Age',
+        xaxis_title = 'Decade',
+        title='Average age of actors per decade per gender with 95% CI',
+        hovermode="x",
+        legend=dict(x=0, y=1, traceorder='normal', orientation='h')
+
+    )
+
+    # Save the Html to open in a browser tab
+    if save_fig:
+        fig.write_html(folder + "Average age of actor per decade per gender with 95% CI.html", auto_open=True)
+    if show_fig_png:
+        fig.show("png")
+    else:
+        fig.show()
 
