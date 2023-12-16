@@ -27,6 +27,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import plotly.graph_objects as go
 import plotly.express as px
 import io
+from scipy import stats
 
 nltk.download('maxent_ne_chunker')
 nltk.download('words')
@@ -556,20 +557,21 @@ def plot_gender_ratio(movies):
 
     ratio_means = ratio_data.groupby('decade').mean().reset_index()
     ratio_means['gender_ratio'] = pd.to_numeric(ratio_means['gender_ratio'], errors='coerce')
-    ratio_stds = ratio_data.groupby('decade').std().reset_index()
+    ratio_ci = ratio_data.groupby('decade')['gender_ratio'].apply(stats.sem).mul(stats.t.ppf(0.975, ratio_data.groupby('decade').size()-1)).reset_index(name='conf')
 
     plt.figure(figsize=(10, 6))
     sns.set(style='whitegrid')
 
-    sns.lineplot(x=ratio_means['decade'], y=ratio_means['gender_ratio'], linewidth=2.5, alpha=0.8)
+    sns.lineplot(x=ratio_means['decade'], y=ratio_means['gender_ratio'], linewidth=2.5, alpha=0.8,label="Decade average")
 
     plt.xlabel('Movie release decade')
     plt.ylabel('Female/Male ratio')
     plt.title('Gender ratio in main characters over time')
-    plt.legend()
+    
 
-    plt.fill_between(ratio_stds['decade'], ratio_means['gender_ratio'] - ratio_stds['gender_ratio'], 
-                     y2 = ratio_means['gender_ratio'] + ratio_stds['gender_ratio'],alpha=0.2)
+    plt.fill_between(ratio_means['decade'], ratio_means['gender_ratio'] - ratio_ci['conf'], 
+                     y2 = ratio_means['gender_ratio'] + ratio_ci['conf'],alpha=0.2, label="95% Confidence Interval")
+    plt.legend()
     plt.show()
 
 
