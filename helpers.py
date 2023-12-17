@@ -575,6 +575,120 @@ def plot_gender_ratio(movies):
     plt.show()
 
 
+def plot_gender_ratio_plotly(movies, save_fig=True, show_png=True, folder=''):
+    """
+    Plots the female to male gender ratio across time in years
+    :param gender_list_per_year: pandas dataframe
+    """
+    movies['gender_ratio'] = movies['main character genders'].apply(calculate_gender_ratio)
+    movies = movies.dropna(subset=['gender_ratio'])
+
+    ratio_data = movies[["decade", "gender_ratio"]]
+
+    ratio_means = ratio_data.groupby('decade').mean().reset_index()
+    ratio_means['gender_ratio'] = pd.to_numeric(ratio_means['gender_ratio'], errors='coerce')
+    ratio_ci = ratio_data.groupby('decade')['gender_ratio'].apply(stats.sem).mul(stats.t.ppf(0.975, ratio_data.groupby('decade').size()-1)).reset_index(name='conf')
+
+    # Create a Plotly figure
+    fig = go.Figure([
+        go.Scatter(
+            name='Decade Average',
+            x=ratio_means['decade'],
+            y=ratio_means['gender_ratio'],
+            mode='lines',
+            marker_color=px.colors.qualitative.Plotly[0]
+        ),
+        go.Scatter(
+            x=ratio_means['decade'],
+            y=ratio_means['gender_ratio'] - ratio_ci['conf'],
+            mode='lines',
+            marker=dict(color="#444"),
+            line=dict(width=0),
+            showlegend=True,
+            name='95% Confidence Interval',
+            fillcolor='rgba(173, 216, 230, 0.3)',
+            fill='tonexty'),
+        go.Scatter(
+            x=ratio_means['decade'],
+            y=ratio_means['gender_ratio'] + ratio_ci['conf'],
+            mode='lines',
+            marker=dict(color="#444"),
+            line=dict(width=0),
+            showlegend=False,
+            name='95% Confidence Interval',
+            fillcolor='rgba(173, 216, 230, 0.3)',
+            fill='tonexty'
+        )
+    ])
+
+    # Update layout
+    fig.update_layout(
+        xaxis_title='Movie release decade',
+        yaxis_title='Female/Male ratio',
+        title='Gender ratio in main characters over time',
+        hovermode="x")
+    fig.update_yaxes(range=[0, 1])
+
+    if save_fig:
+        fig.write_html(folder + "main_char_ratio.html", auto_open=True)
+    if show_png:
+        fig.show('png')
+    else:
+        fig.show()
+
+
+def subplot_gender_ratio(movies, idx, subplot):
+    """
+    Plots the female to male gender ratio across time in years
+    :param gender_list_per_year: pandas dataframe
+    """
+    movies['gender_ratio'] = movies['main character genders'].apply(calculate_gender_ratio)
+    movies = movies.dropna(subset=['gender_ratio'])
+
+    ratio_data = movies[["decade", "gender_ratio"]]
+
+    ratio_means = ratio_data.groupby('decade').mean().reset_index()
+    ratio_means['gender_ratio'] = pd.to_numeric(ratio_means['gender_ratio'], errors='coerce')
+    ratio_ci = ratio_data.groupby('decade')['gender_ratio'].apply(stats.sem).mul(stats.t.ppf(0.975, ratio_data.groupby('decade').size()-1)).reset_index(name='conf')
+
+    # Create a Plotly figure
+    plot_average = go.Scatter(
+            name='Decade Average',
+            x=ratio_means['decade'],
+            y=ratio_means['gender_ratio'],
+            mode='lines',
+            marker_color=px.colors.qualitative.Plotly[0]
+        )
+    plot_lower_bound = go.Scatter(
+            x=ratio_means['decade'],
+            y=ratio_means['gender_ratio'] - ratio_ci['conf'],
+            mode='lines',
+            marker=dict(color="#444"),
+            line=dict(width=0),
+            showlegend=True,
+            name='95% Confidence Interval',
+            fillcolor='rgba(173, 216, 230, 0.3)',
+            fill='tonexty')
+    plot_upper_bound = go.Scatter(
+            x=ratio_means['decade'],
+            y=ratio_means['gender_ratio'] + ratio_ci['conf'],
+            mode='lines',
+            marker=dict(color="#444"),
+            line=dict(width=0),
+            showlegend=False,
+            name='95% Confidence Interval',
+            fillcolor='rgba(173, 216, 230, 0.3)',
+            fill='tonexty')
+
+    if idx != 1:
+        plot_lower_bound.update(dict(showlegend=False))
+        plot_average.update(dict(showlegend=False))
+    subplot.append_trace(plot_average, row=idx%2+1, col=idx%3+1)
+    subplot.append_trace(plot_upper_bound, row=idx%2+1, col=idx%3+1)
+    subplot.append_trace(plot_lower_bound, row=idx % 2 + 1, col=idx % 3 + 1)
+    subplot.update_yaxes(range=[0, 1], row=idx % 2 + 1, col=idx % 3 + 1)
+
+
 def random_movies_per_year(group):
     """
     Selects 20 movies at random
@@ -1355,7 +1469,6 @@ def subplot_average_age_actor_across_decades(character_data, idx, subplot):
     subplot.update_yaxes(range=[20, 55], row=idx%2+1, col=idx%3+1)
 
 
-
 def plot_average_age_actor_across_decades(character_data,save_fig=True,show_fig_png=True, folder=''):
     """
     This function plots the average age of female and male actors across decades along with their 95% CI
@@ -1365,7 +1478,8 @@ def plot_average_age_actor_across_decades(character_data,save_fig=True,show_fig_
     :return: no return, the plot is displayed
     """
 
-    plot_men, men_upper_bound, men_lower_bound, plot_women, women_upper_bound, women_lower_bound = create_data_age_plots(character_data)
+    plot_men, men_upper_bound, men_lower_bound, plot_women, women_upper_bound, women_lower_bound = \
+        create_data_age_plots(character_data)
 
     # plot the plot with plotly to have an interactive plot
     fig = go.Figure([plot_men, men_upper_bound, men_lower_bound, plot_women, women_upper_bound, women_lower_bound])
@@ -1373,7 +1487,7 @@ def plot_average_age_actor_across_decades(character_data,save_fig=True,show_fig_
     # Create figure
     fig.update_layout(
         yaxis_title='Age',
-        xaxis_title = 'Decade',
+        xaxis_title='Decade',
         title='Average age of actors per decade per gender with 95% CI',
         hovermode="x",
         legend=dict(x=0, y=1, traceorder='normal', orientation='h')
@@ -1386,4 +1500,3 @@ def plot_average_age_actor_across_decades(character_data,save_fig=True,show_fig_
         fig.show("png")
     else:
         fig.show()
-
