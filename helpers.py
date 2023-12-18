@@ -35,6 +35,7 @@ nltk.download('averaged_perceptron_tagger')
 nltk.download('stopwords')
 nltk.download('punkt')
 
+
 ######################################### COMPLEMENTING DATASETS #######################################################
 
 
@@ -149,8 +150,8 @@ def get_history_timeline(save_path='DATA/', file_name='timeline.csv'):
     else:
         print('could not access ' + url)
 
-    timeline.to_csv(save_path+file_name, index=False)
-    print(f'Timeline saved in {save_path+file_name}')
+    timeline.to_csv(save_path + file_name, index=False)
+    print(f'Timeline saved in {save_path + file_name}')
 
 
 def filter_titles_IDs(dataset):
@@ -218,7 +219,7 @@ def get_IMDB_movies_data(IMDB_ids, save_path='DATA/', file_name='IMDB_movies_201
     for id in IMDB_ids:
         try:
             # get movie from IMDB
-            movie = ia.get_movie(id[2:]) # the first 2 characters of the ID need to be removed
+            movie = ia.get_movie(id[2:])  # the first 2 characters of the ID need to be removed
         except Exception as e:
             print(f"An error occurred for movie {id}: {e}")
         try:
@@ -243,7 +244,7 @@ def get_IMDB_movies_data(IMDB_ids, save_path='DATA/', file_name='IMDB_movies_201
          'genre': genres, 'plot_summary': plots})
 
     # save it
-    IMDB_data.to_csv(save_path+file_name, index=False)
+    IMDB_data.to_csv(save_path + file_name, index=False)
 
 
 def filter_IMDB_movie_dataset(data):
@@ -259,7 +260,8 @@ def filter_IMDB_movie_dataset(data):
     data = data[pd.notna(data['languages'])]
     # keep only US movies
     IMDB_data_us = data[data['countries'].str.contains('United States', case=False)].copy()
-    IMDB_data_us_en = IMDB_data_us[IMDB_data_us['languages'].str.contains('English' or 'American Sign', case=False)].copy()
+    IMDB_data_us_en = IMDB_data_us[
+        IMDB_data_us['languages'].str.contains('English' or 'American Sign', case=False)].copy()
     # keep only movies from 2010-2022
     IMDB_data_us_en = IMDB_data_us_en[(IMDB_data_us_en['release_date'] < 2023)]
     # drop duplicates movie if any
@@ -292,9 +294,11 @@ def clean_IMDB_character_dataset(dataframe, IMDB_ids):
     characters_data = characters_data.drop(columns=['job', 'category'])
 
     # convert into a list
-    characters_data['characters'] = characters_data['characters'].apply(lambda x: ast.literal_eval(x) if x != '\\N' else x)
+    characters_data['characters'] = characters_data['characters'].apply(
+        lambda x: ast.literal_eval(x) if x != '\\N' else x)
     # Extract strings from lists
-    characters_data['characters'] = characters_data['characters'].apply(lambda x: x[0]if isinstance(x, list) and len(x) > 0 else x)
+    characters_data['characters'] = characters_data['characters'].apply(
+        lambda x: x[0] if isinstance(x, list) and len(x) > 0 else x)
 
     return characters_data
 
@@ -351,7 +355,7 @@ def merge_datasets_characters(characters_data, actors_data, movie_data):
     characters_data_final.loc[characters_data_final['actor_birthday'] == '\\N', 'actor_birthday'] = None
     characters_data_final['actor_birthday'] = (characters_data_final['actor_birthday']).astype(float)
     characters_data_final['actor_age'] = (
-                characters_data_final['release_date'] - (characters_data_final['actor_birthday']).astype(float))
+            characters_data_final['release_date'] - (characters_data_final['actor_birthday']).astype(float))
 
     # drop actor_birthday column
     characters_data_final = characters_data_final.drop(columns='actor_birthday')
@@ -383,7 +387,7 @@ def get_popularity_index(data, threshold=10):
 
     # select years on which to compute popularity index
     data_per_year = data.groupby('release_date').count()
-    fraction_box_office_per_year = data_per_year['box_office_revenue']*100/data_per_year['IMDB_ID']
+    fraction_box_office_per_year = data_per_year['box_office_revenue'] * 100 / data_per_year['IMDB_ID']
     box_office_years = fraction_box_office_per_year[fraction_box_office_per_year > threshold].index
 
     # get average of 3 biggest box-office for each year
@@ -395,7 +399,7 @@ def get_popularity_index(data, threshold=10):
     for i in range(data.shape[0]):
         year = data['release_date'][i]
         if year in box_office_years:
-            pop_index.append(data['box_office_revenue'][i]/max_per_year[year])
+            pop_index.append(data['box_office_revenue'][i] / max_per_year[year])
         else:
             pop_index.append(None)
 
@@ -404,7 +408,7 @@ def get_popularity_index(data, threshold=10):
 
 ######################################### MAIN CHARACTER ANALYSIS ######################################################
 
-def select_elligible_movies_for_main_char_analysis(movie_metadata,character_metadata):
+def select_elligible_movies_for_main_char_analysis(movie_metadata, character_metadata):
     """
     Selects movies that are elligible for the main character analysis
     :param movie_metadata: panda dataframe
@@ -413,25 +417,25 @@ def select_elligible_movies_for_main_char_analysis(movie_metadata,character_meta
     """
     # Removing movies without summaries
     elligible_movies = movie_metadata[movie_metadata['plot_summary'].notna()]
-    
+
     # Removing movies with no listed characters
     movies_with_no_listed_char_wiki_ID = []
     movies_with_no_listed_char_imdb_ID = []
-    for wiki_id,imdb_id in zip(elligible_movies['wikipedia_ID'],elligible_movies['IMDB_ID']):
-        
+    for wiki_id, imdb_id in zip(elligible_movies['wikipedia_ID'], elligible_movies['IMDB_ID']):
+
         if not pd.isnull(wiki_id) and pd.isnull(imdb_id):
-            if character_metadata.loc[character_metadata['wikipedia_ID']==wiki_id].empty:
+            if character_metadata.loc[character_metadata['wikipedia_ID'] == wiki_id].empty:
                 movies_with_no_listed_char_wiki_ID.append(wiki_id)
             continue
 
         if pd.isnull(wiki_id) and not pd.isnull(imdb_id):
-            if character_metadata.loc[character_metadata['IMDB_ID']==imdb_id].empty:
+            if character_metadata.loc[character_metadata['IMDB_ID'] == imdb_id].empty:
                 movies_with_no_listed_char_imdb_ID.append(imdb_id)
             continue
 
         if not pd.isnull(wiki_id) and not pd.isnull(imdb_id):
-            no_char_on_wikipedia = character_metadata.loc[character_metadata['wikipedia_ID']==wiki_id].empty
-            no_char_on_imdb = character_metadata.loc[character_metadata['IMDB_ID']==imdb_id].empty
+            no_char_on_wikipedia = character_metadata.loc[character_metadata['wikipedia_ID'] == wiki_id].empty
+            no_char_on_imdb = character_metadata.loc[character_metadata['IMDB_ID'] == imdb_id].empty
 
             if no_char_on_wikipedia and no_char_on_imdb:
                 movies_with_no_listed_char_wiki_ID.append(wiki_id)
@@ -440,16 +444,17 @@ def select_elligible_movies_for_main_char_analysis(movie_metadata,character_meta
     elligible_movies = elligible_movies[~elligible_movies['wikipedia_ID'].isin(movies_with_no_listed_char_wiki_ID)]
     elligible_movies = elligible_movies[~elligible_movies['IMDB_ID'].isin(movies_with_no_listed_char_imdb_ID)]
 
-    id_types = ['wikipedia_ID','IMDB_ID']
+    id_types = ['wikipedia_ID', 'IMDB_ID']
     for id_type in id_types:
-
         # Removing movies with characters having name listed as nan
-        movies_with_nan_characters_ID = pd.Series(character_metadata[character_metadata['character_name'].isna()][id_type].unique())
+        movies_with_nan_characters_ID = pd.Series(
+            character_metadata[character_metadata['character_name'].isna()][id_type].unique())
         movies_with_nan_characters_ID = movies_with_nan_characters_ID.dropna().tolist()
         elligible_movies = elligible_movies[~elligible_movies[id_type].isin(movies_with_nan_characters_ID)]
 
         # Removing movies with characters having gender listed as nan
-        movies_with_nan_genders_ID = pd.Series(character_metadata[character_metadata['actor_gender'].isna()][id_type].unique())
+        movies_with_nan_genders_ID = pd.Series(
+            character_metadata[character_metadata['actor_gender'].isna()][id_type].unique())
         movies_with_nan_genders_ID = movies_with_nan_genders_ID.dropna().tolist()
         elligible_movies = elligible_movies[~elligible_movies[id_type].isin(movies_with_nan_genders_ID)]
 
@@ -498,10 +503,10 @@ def extract_main_characters(summary: str, nb_sentences=5):
 
     # Converting from dictionary to ordered list
     ordered_characters = sorted(characters.items(), key=lambda x: x[1], reverse=True)
-    
+
     ordered_characters = Counter(characters).most_common()
     main_characters = [name for name, count in ordered_characters[:3]]
-    
+
     return main_characters
 
 
@@ -514,22 +519,24 @@ def find_main_characters_genders(movie_row, characters_df):
     """
     IMDB_ID_character_list = characters_df.loc[characters_df['IMDB_ID'] == movie_row['IMDB_ID']]
     wikipedia_ID_character_list = characters_df.loc[characters_df['wikipedia_ID'] == movie_row['wikipedia_ID']]
-    selected_character_metadata = pd.concat([IMDB_ID_character_list,wikipedia_ID_character_list],ignore_index=True)
+    selected_character_metadata = pd.concat([IMDB_ID_character_list, wikipedia_ID_character_list], ignore_index=True)
 
     genders = []
     for name in movie_row['main characters']:
         confidence = 0
         if selected_character_metadata['character_name'].any():
-            closest_character, confidence, score = process.extractOne(name, selected_character_metadata['character_name'])
-            
+            closest_character, confidence, score = process.extractOne(name,
+                                                                      selected_character_metadata['character_name'])
+
         if confidence > 50:
-            gender = selected_character_metadata.loc[selected_character_metadata['character_name'] == closest_character, 'actor_gender'].values[0]
+            gender = selected_character_metadata.loc[
+                selected_character_metadata['character_name'] == closest_character, 'actor_gender'].values[0]
             genders.append(gender)
 
     return genders
 
 
-def calculate_gender_ratio(genders:list):
+def calculate_gender_ratio(genders: list):
     """
     Calculates the female to male gender ratio in a list of strings
     containing ['M'] and ['F']
@@ -539,46 +546,16 @@ def calculate_gender_ratio(genders:list):
 
     if len(genders) == 0:
         return pd.NA
-    
+
     nb_females = sum(1 for gender in genders if gender == 'F')
 
-    return nb_females/len(genders)
+    return nb_females / len(genders)
 
 
 def plot_gender_ratio(movies):
     """
     Plots the female to male gender ratio across time in years
-    :param gender_list_per_year: pandas dataframe
-    """
-    movies['gender_ratio'] = movies['main character genders'].apply(calculate_gender_ratio)
-    movies = movies.dropna(subset=['gender_ratio'])
-
-    ratio_data = movies[["decade","gender_ratio"]]
-
-    ratio_means = ratio_data.groupby('decade').mean().reset_index()
-    ratio_means['gender_ratio'] = pd.to_numeric(ratio_means['gender_ratio'], errors='coerce')
-    ratio_ci = ratio_data.groupby('decade')['gender_ratio'].apply(stats.sem).mul(stats.t.ppf(0.975, ratio_data.groupby('decade').size()-1)).reset_index(name='conf')
-
-    plt.figure(figsize=(10, 6))
-    sns.set(style='whitegrid')
-
-    sns.lineplot(x=ratio_means['decade'], y=ratio_means['gender_ratio'], linewidth=2.5, alpha=0.8,label="Decade average")
-
-    plt.xlabel('Movie release decade')
-    plt.ylabel('Female/Male ratio')
-    plt.title('Gender ratio in main characters over time')
-    
-
-    plt.fill_between(ratio_means['decade'], ratio_means['gender_ratio'] - ratio_ci['conf'], 
-                     y2 = ratio_means['gender_ratio'] + ratio_ci['conf'],alpha=0.2, label="95% Confidence Interval")
-    plt.legend()
-    plt.show()
-
-
-def plot_gender_ratio_plotly(movies, save_fig=True, show_png=True, folder=''):
-    """
-    Plots the female to male gender ratio across time in years
-    :param gender_list_per_year: pandas dataframe
+    :param movies: pandas dataframe
     """
     movies['gender_ratio'] = movies['main character genders'].apply(calculate_gender_ratio)
     movies = movies.dropna(subset=['gender_ratio'])
@@ -587,41 +564,93 @@ def plot_gender_ratio_plotly(movies, save_fig=True, show_png=True, folder=''):
 
     ratio_means = ratio_data.groupby('decade').mean().reset_index()
     ratio_means['gender_ratio'] = pd.to_numeric(ratio_means['gender_ratio'], errors='coerce')
-    ratio_ci = ratio_data.groupby('decade')['gender_ratio'].apply(stats.sem).mul(stats.t.ppf(0.975, ratio_data.groupby('decade').size()-1)).reset_index(name='conf')
+    ratio_ci = ratio_data.groupby('decade')['gender_ratio'].apply(stats.sem).mul(
+        stats.t.ppf(0.975, ratio_data.groupby('decade').size() - 1)).reset_index(name='conf')
+
+    plt.figure(figsize=(10, 6))
+    sns.set(style='whitegrid')
+
+    sns.lineplot(x=ratio_means['decade'], y=ratio_means['gender_ratio'], linewidth=2.5, alpha=0.8,
+                 label="Decade average")
+
+    plt.xlabel('Movie release decade')
+    plt.ylabel('Female/Male ratio')
+    plt.title('Gender ratio in main characters over time')
+    plt.fill_between(ratio_means['decade'], ratio_means['gender_ratio'] - ratio_ci['conf'],
+                     y2=ratio_means['gender_ratio'] + ratio_ci['conf'], alpha=0.2, label="95% Confidence Interval")
+    plt.legend()
+    plt.show()
+
+
+def create_data_plot_gender_ratio(movies):
+    """
+    Create plotly go.Scatter objects that can be used to plot the average main character gender ratio of movies per
+    decade and the 95% confidence interval
+    :param movies: pandas dataframe: contains information on the movies we wish to plot.
+    Must contain the columns "main_character_genders" and "decade".
+    :return: plot_average, plot_lower_bound, plot_upper_bound
+    """
+
+    # compute main character gender ratio average
+    movies['gender_ratio'] = movies['main character genders'].apply(calculate_gender_ratio)
+    movies = movies.dropna(subset=['gender_ratio'])
+    ratio_data = movies[["decade", "gender_ratio"]]
+    # average per decade
+    ratio_means = ratio_data.groupby('decade').mean().reset_index()
+    ratio_means['gender_ratio'] = pd.to_numeric(ratio_means['gender_ratio'], errors='coerce')
+    # compute 95% confidence interval
+    ratio_ci = ratio_data.groupby('decade')['gender_ratio']. \
+        apply(stats.sem).mul(stats.t.ppf(0.975, ratio_data.groupby('decade').size() - 1)).reset_index(name='conf')
+
+    # Create average line
+    plot_average = go.Scatter(
+        name='Decade Average',
+        x=ratio_means['decade'],
+        y=ratio_means['gender_ratio'],
+        mode='lines',
+        marker_color=px.colors.qualitative.Plotly[0]
+    )
+    # create 95% CI lines
+    plot_lower_bound = go.Scatter(
+        x=ratio_means['decade'],
+        y=ratio_means['gender_ratio'] - ratio_ci['conf'],
+        mode='lines',
+        marker=dict(color="#444"),
+        line=dict(width=0),
+        showlegend=True,
+        name='95% Confidence Interval',
+        fillcolor='rgba(173, 216, 230, 0.3)',
+        fill='tonexty')
+    plot_upper_bound = go.Scatter(
+        x=ratio_means['decade'],
+        y=ratio_means['gender_ratio'] + ratio_ci['conf'],
+        mode='lines',
+        marker=dict(color="#444"),
+        line=dict(width=0),
+        showlegend=False,
+        name='95% Confidence Interval',
+        fillcolor='rgba(173, 216, 230, 0.3)',
+        fill='tonexty')
+
+    return plot_average, plot_lower_bound, plot_upper_bound
+
+
+def plot_gender_ratio_plotly(movies, save_fig=True, show_png=True, folder='', file_name="main_char_ratio.html"):
+    """
+    Creates an interactive plot of the average main character gender ratio of movies per decade and the 95% confidence
+    interval using the plotly library
+    :param movies: pandas dataframe: contains information on the movies we wish to plot.
+    Must contain the columns "gender_ratio", "main_character_genders" and "decade".
+    :param save_fig: bool: if True, will save the interactive plot in a .html file, default = True
+    :param show_png: bool: if True will display the plot as a png instead of as an interactive plot, default = True
+    :param folder: string: name of the folder to save the figure in, default=''
+    :param file_name: string: name of the file to save the figure in, default='main_char_ratio.html'
+    """
+    plot_average, plot_lower_bound, plot_upper_bound = create_data_plot_gender_ratio(movies)
 
     # Create a Plotly figure
-    fig = go.Figure([
-        go.Scatter(
-            name='Decade Average',
-            x=ratio_means['decade'],
-            y=ratio_means['gender_ratio'],
-            mode='lines',
-            marker_color=px.colors.qualitative.Plotly[0]
-        ),
-        go.Scatter(
-            x=ratio_means['decade'],
-            y=ratio_means['gender_ratio'] - ratio_ci['conf'],
-            mode='lines',
-            marker=dict(color="#444"),
-            line=dict(width=0),
-            showlegend=True,
-            name='95% Confidence Interval',
-            fillcolor='rgba(173, 216, 230, 0.3)',
-            fill='tonexty'),
-        go.Scatter(
-            x=ratio_means['decade'],
-            y=ratio_means['gender_ratio'] + ratio_ci['conf'],
-            mode='lines',
-            marker=dict(color="#444"),
-            line=dict(width=0),
-            showlegend=False,
-            name='95% Confidence Interval',
-            fillcolor='rgba(173, 216, 230, 0.3)',
-            fill='tonexty'
-        )
-    ])
+    fig = go.Figure([plot_average, plot_lower_bound, plot_upper_bound])
 
-    # Update layout
     fig.update_layout(
         xaxis_title='Movie release decade',
         yaxis_title='Female/Male ratio',
@@ -630,7 +659,7 @@ def plot_gender_ratio_plotly(movies, save_fig=True, show_png=True, folder=''):
     fig.update_yaxes(range=[0, 1])
 
     if save_fig:
-        fig.write_html(folder + "main_char_ratio.html", auto_open=True)
+        fig.write_html(folder + file_name, auto_open=True)
     if show_png:
         fig.show('png')
     else:
@@ -639,53 +668,24 @@ def plot_gender_ratio_plotly(movies, save_fig=True, show_png=True, folder=''):
 
 def subplot_gender_ratio(movies, idx, subplot):
     """
-    Plots the female to male gender ratio across time in years
-    :param gender_list_per_year: pandas dataframe
+    Creates a subplot of the average main character gender ratio of movies per decade and the 95% confidence
+    interval using the plotly library
+    :param movies: pandas dataframe: contains information on the movies we wish to plot.
+    Must contain the columns "gender_ratio", "main_character_genders" and "decade".
+    :param idx: int: Where to plot the subplot in a 2x3 grid. The location is (idx%2+1, idx%3+1)
+    :param subplot: plotly.subplots object: plot to which the subplot will be added
     """
-    movies['gender_ratio'] = movies['main character genders'].apply(calculate_gender_ratio)
-    movies = movies.dropna(subset=['gender_ratio'])
 
-    ratio_data = movies[["decade", "gender_ratio"]]
+    plot_average, plot_lower_bound, plot_upper_bound = create_data_plot_gender_ratio(movies)
+    plots = [plot_average, plot_lower_bound, plot_upper_bound]
 
-    ratio_means = ratio_data.groupby('decade').mean().reset_index()
-    ratio_means['gender_ratio'] = pd.to_numeric(ratio_means['gender_ratio'], errors='coerce')
-    ratio_ci = ratio_data.groupby('decade')['gender_ratio'].apply(stats.sem).mul(stats.t.ppf(0.975, ratio_data.groupby('decade').size()-1)).reset_index(name='conf')
-
-    # Create a Plotly figure
-    plot_average = go.Scatter(
-            name='Decade Average',
-            x=ratio_means['decade'],
-            y=ratio_means['gender_ratio'],
-            mode='lines',
-            marker_color=px.colors.qualitative.Plotly[0]
-        )
-    plot_lower_bound = go.Scatter(
-            x=ratio_means['decade'],
-            y=ratio_means['gender_ratio'] - ratio_ci['conf'],
-            mode='lines',
-            marker=dict(color="#444"),
-            line=dict(width=0),
-            showlegend=True,
-            name='95% Confidence Interval',
-            fillcolor='rgba(173, 216, 230, 0.3)',
-            fill='tonexty')
-    plot_upper_bound = go.Scatter(
-            x=ratio_means['decade'],
-            y=ratio_means['gender_ratio'] + ratio_ci['conf'],
-            mode='lines',
-            marker=dict(color="#444"),
-            line=dict(width=0),
-            showlegend=False,
-            name='95% Confidence Interval',
-            fillcolor='rgba(173, 216, 230, 0.3)',
-            fill='tonexty')
-
+    # show legend only one
     if idx != 1:
         plot_lower_bound.update(dict(showlegend=False))
         plot_average.update(dict(showlegend=False))
-    subplot.append_trace(plot_average, row=idx%2+1, col=idx%3+1)
-    subplot.append_trace(plot_upper_bound, row=idx%2+1, col=idx%3+1)
-    subplot.append_trace(plot_lower_bound, row=idx % 2 + 1, col=idx % 3 + 1)
+
+    for plot in plots:
+        subplot.append_trace(plot, row=idx % 2 + 1, col=idx % 3 + 1)
     subplot.update_yaxes(range=[0, 1], row=idx % 2 + 1, col=idx % 3 + 1)
 
 
@@ -696,18 +696,20 @@ def random_movies_per_year(group):
     """
     return group.sample(n=min(20, len(group)), random_state=10)
 
+
 ################################## GENRES PREPROCESSING ################################################################
 
 
 def no_genres_in_list(genres, df):
-    ID_no_accepted_genre=[]
-    for index,row in df.iterrows():
-        ID=row['name']
-        genre=row['genre']
-        if all(element in genres for element in genre) and genre!=[]:
+    ID_no_accepted_genre = []
+    for index, row in df.iterrows():
+        ID = row['name']
+        genre = row['genre']
+        if all(element in genres for element in genre) and genre != []:
             ID_no_accepted_genre.append(ID)
-    print("Number of movies : ",len(ID_no_accepted_genre))
+    print("Number of movies : ", len(ID_no_accepted_genre))
     return ID_no_accepted_genre
+
 
 ################################## PERSONAS PREPROCESSING ##############################################################
 
@@ -722,7 +724,8 @@ def extract_words(df, id_col, char_name_col, to_extract):
     # Adding tags for verbs, adjectives, and nouns
     verb_tags = ['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']
     adj_tags = ['JJ', 'JJR', 'JJS']
-    noun_tags = ['NN', 'NNS'] # We do not take NNPs and NNP because they are names and we do not want to include names in our analysis
+    noun_tags = ['NN',
+                 'NNS']  # We do not take NNPs and NNP because they are names and we do not want to include names in our analysis
 
     for index, row in tqdm(df.iterrows(), total=len(df), desc="Processing Movies"):
         verbs = []
@@ -760,7 +763,9 @@ def extract_words(df, id_col, char_name_col, to_extract):
     # Returns lists of all verbs, adjectives, and nouns for each movie and raw chunks for each movie
     return verbs_list, adjs_list, nouns_list, chunks_array
 
-def find_characters_genders_for_all_movies(movies_df, characters_df): # modify so you also return the full list of character names so that no need to redo fuzzy wory!
+
+def find_characters_genders_for_all_movies(movies_df,
+                                           characters_df):  # modify so you also return the full list of character names so that no need to redo fuzzy wory!
     """
     Finds the gender of characters for all movies in a dataframe
     :param movies_df: pandas dataframe with movie information
@@ -776,18 +781,21 @@ def find_characters_genders_for_all_movies(movies_df, characters_df): # modify s
 
             genders = []
             characters = []
-            summary_words = [word for word in word_tokenize(movie_row['plot_summary'].lower()) if word.isalnum()]  # Tokenize and exclude non-alphanumeric characters
+            summary_words = [word for word in word_tokenize(movie_row['plot_summary'].lower()) if
+                             word.isalnum()]  # Tokenize and exclude non-alphanumeric characters
 
             # Set to keep track of already matched characters for the current movie and summary
             matched_characters = set()
 
             for word in summary_words:
-                closest_character, confidence, score = process.extractOne(word, IMDB_ID_character_list['character_name'])
+                closest_character, confidence, score = process.extractOne(word,
+                                                                          IMDB_ID_character_list['character_name'])
 
                 if confidence > 50 and closest_character:  # Check confidence and non-empty character
                     # Check if the character has already been matched for the current movie and summary
                     if closest_character not in matched_characters:
-                        gender = IMDB_ID_character_list.loc[IMDB_ID_character_list['character_name'] == closest_character, 'actor_gender'].values
+                        gender = IMDB_ID_character_list.loc[
+                            IMDB_ID_character_list['character_name'] == closest_character, 'actor_gender'].values
                         if len(gender) > 0:
                             characters.append(closest_character)
                             genders.append(gender[0])
@@ -853,6 +861,7 @@ def extract_context_strings(result_df):
 
     return result_df_with_context
 
+
 def create_gender_dictionaries(df):
     # Initialize dictionaries for male and female characters
     male_dict = {}
@@ -861,12 +870,12 @@ def create_gender_dictionaries(df):
     # Iterate through the dataframe and populate dictionaries
     for index, row in df.iterrows():
         gender = row['actor_gender']
-        decade = row['decade'] # we want the create a ductionnary per decade to later analyze
+        decade = row['decade']  # we want the create a ductionnary per decade to later analyze
 
         # Check if the gender is male and handle empty lists (characters don't necessarily have words of the 3 cat. associated to them
         if gender == 'M':
             if decade not in male_dict:
-                male_dict[decade] = {'Verbs': [], 'Adjectives': [], 'Nouns': []} # create a dict per decade
+                male_dict[decade] = {'Verbs': [], 'Adjectives': [], 'Nouns': []}  # create a dict per decade
 
             male_dict[decade]['Verbs'].extend(row['Verbs']) if row['Verbs'] else None
             male_dict[decade]['Adjectives'].extend(row['Adjectives']) if row['Adjectives'] else None
@@ -883,6 +892,7 @@ def create_gender_dictionaries(df):
 
     return male_dict, female_dict
 
+
 def calculate_word_frequencies(dictionary):
     # Initialize a dictionary for each category (Verbs, Adjectives, Nouns)
     frequencies = {'Verbs': {}, 'Adjectives': {}, 'Nouns': {}}
@@ -895,6 +905,7 @@ def calculate_word_frequencies(dictionary):
 
     return frequencies
 
+
 # Function to apply stemming to a list of words with a progress bar
 def stem_words_with_progress(word_list):
     stemmer = PorterStemmer()
@@ -903,7 +914,8 @@ def stem_words_with_progress(word_list):
         stemmed_words.append(stemmer.stem(word))
     return stemmed_words
 
-def subtract_frequencies(frequencies_1, frequencies_2): 
+
+def subtract_frequencies(frequencies_1, frequencies_2):
     subtracted_frequencies = {}
     words_only_in_freq1 = {}
     words_only_in_freq2 = {}
@@ -934,6 +946,7 @@ def subtract_frequencies(frequencies_1, frequencies_2):
 
     return subtracted_frequencies, words_only_in_freq1, words_only_in_freq2
 
+
 def plot_rel_freq_per_decade(relative_frequencies, categories):
     # Create subplots for each category
     decades = relative_frequencies.keys()
@@ -960,7 +973,8 @@ def plot_rel_freq_per_decade(relative_frequencies, categories):
             top_frequencies = [relative_frequencies[decade][category][word] for word in top_words]
 
             # Plot the bar chart for each category
-            bars = axs[i, j].bar(top_words, top_frequencies, color=['skyblue' if freq >= 0 else 'pink' for freq in top_frequencies])
+            bars = axs[i, j].bar(top_words, top_frequencies,
+                                 color=['skyblue' if freq >= 0 else 'pink' for freq in top_frequencies])
             axs[i, j].set_title(f'{category} {decade}')
             axs[i, j].set_ylabel('Relative frequencies: Male - Female')
 
@@ -970,9 +984,9 @@ def plot_rel_freq_per_decade(relative_frequencies, categories):
     # Adjust layout and show the plots
     plt.tight_layout()
     plt.show()
-    
-    
-def plot_top_words_per_decade(frequencies, categories, col = "blue"):
+
+
+def plot_top_words_per_decade(frequencies, categories, col="blue"):
     # Create subplots for each category
     decades = frequencies.keys()
     num_categories = len(categories)
@@ -1002,22 +1016,25 @@ def plot_top_words_per_decade(frequencies, categories, col = "blue"):
     # Adjust layout and show the plots
     plt.tight_layout()
     plt.show()
-    
+
+
 def subset_df(df, genre):
     df_subset_genre = df[df['genre'].str.len() > 0]
     df_subset_genre = df_subset_genre[df_subset_genre['genre'].apply(lambda x: genre in x)]
     return df_subset_genre
 
-def plot_by_genre(genre,df):
-    df_subset_genre=subset_df(df, genre)
-    male_dict_genre,female_dict_genre=create_gender_dictionaries(df_subset_genre)
-    male_frequencies_per_decade_genre  = calculate_word_frequencies(male_dict_genre)
-    female_frequencies_per_decade_genre = calculate_word_frequencies(female_dict_genre)
-    relative_frequencies_genre, unique_male_genre, unique_female_genre = subtract_frequencies(male_frequencies_per_decade_genre, female_frequencies_per_decade_genre)
-    plot_rel_freq_per_decade(relative_frequencies_genre, ['Verbs', 'Adjectives', 'Nouns'])
-    
-######################################## CLUSTERING OF STEREOTYPICAL MOVIES ############################################
 
+def plot_by_genre(genre, df):
+    df_subset_genre = subset_df(df, genre)
+    male_dict_genre, female_dict_genre = create_gender_dictionaries(df_subset_genre)
+    male_frequencies_per_decade_genre = calculate_word_frequencies(male_dict_genre)
+    female_frequencies_per_decade_genre = calculate_word_frequencies(female_dict_genre)
+    relative_frequencies_genre, unique_male_genre, unique_female_genre = subtract_frequencies(
+        male_frequencies_per_decade_genre, female_frequencies_per_decade_genre)
+    plot_rel_freq_per_decade(relative_frequencies_genre, ['Verbs', 'Adjectives', 'Nouns'])
+
+
+######################################## CLUSTERING OF STEREOTYPICAL MOVIES ############################################
 
 def compute_difference_mean_ages(data):
     """
@@ -1042,7 +1059,7 @@ def compute_difference_mean_ages(data):
 
     # create the final dataframe
     mean_ages = pd.merge(df_mean_age_F, df_mean_age_M, on='IMDB_ID', how='outer')
-    mean_ages['difference_mean_ages'] = mean_ages['mean_age_female']-mean_ages['mean_age_male']
+    mean_ages['difference_mean_ages'] = mean_ages['mean_age_female'] - mean_ages['mean_age_male']
 
     # removes incoherent data if present (negative ages)
     mean_ages = mean_ages[(mean_ages['mean_age_female'] > 0) & (mean_ages['mean_age_male'] > 0)]
@@ -1163,9 +1180,14 @@ def bootstrap_ci_stereotypical_movies(data, num_iterations=1000, alpha=0.05):
 
 ########################## PLOT PROPORTIONS AND AGES ###################################################################
 def create_plot_male_female(character_data):
-
+    """
+    Create plotly go.Bar objects that can be used to plot the average female and male proportions in movies per decade.
+    :param character_data: pandas dataframe: contains information on the characters we wish to plot.
+    Must contain the columns "actor_gender" and "decade".
+    :return: plot_male, plot_female
+    """
+    # compute proportions per decade
     character_data_grouped_by_decade = character_data.groupby(character_data['decade'])
-
     proportion_female = character_data_grouped_by_decade['actor_gender'].apply(lambda x: (x == 'F').sum() / len(x))
     proportion_male = 1 - proportion_female
 
@@ -1184,25 +1206,36 @@ def create_plot_male_female(character_data):
 
 
 def subplot_proportion_men_women_per_decade(character_data, idx, subplot):
-
+    """
+    Creates an interactive subplot of the average female and male proportions in movies per decade using the plotly library
+    :param character_data: pandas dataframe: contains information on the characters we wish to plot.
+    Must contain the columns "actor_gender" and "decade".
+    :param idx: int: Where to plot the subplot in a 2x3 grid. The location is (idx%2+1, idx%3+1).
+    :param subplot: plotly.subplots object: plot to which the subplot will be added
+    """
     plot_male, plot_female = create_plot_male_female(character_data)
 
+    # show legend only once
     if idx != 1:
         plot_male.update(dict(showlegend=False))
         plot_female.update(dict(showlegend=False))
-    subplot.append_trace(plot_female, row=idx%2+1, col=idx%3+1)
-    subplot.append_trace(plot_male, row=idx%2+1, col=idx%3+1)
+
+    subplot.append_trace(plot_female, row=idx % 2 + 1, col=idx % 3 + 1)
+    subplot.append_trace(plot_male, row=idx % 2 + 1, col=idx % 3 + 1)
 
 
-def plot_proportion_men_women_per_decade(character_data, save_fig=True, show_fig_png=True, folder=''):
+def plot_proportion_men_women_per_decade(character_data, save_fig=True, show_fig_png=True, folder='',
+                                         file_name="Proportion of Men vs Women in Movies per Decade.html"):
     """
-    This function displays an interactive graph using plotly of the proportion of men vs women characters over decades.
-    :param character_data: the data to be plotted in a dataframe. Assuming there is a column "decade"
-    as well as a column "actor_gender
-    :param save_fig: if true, the interactive plot will be saved in an HTML file
-    :param show_fig_png: if true, the fig is displayed as a PNG (used for github display), else the figure is displayed
-    as an interactive graph
-    :return: no return, the plot is displayed
+    Displays an interactive graph of the average female and male proportions in movies per decade using the plotly library
+    :param character_data: pandas dataframe: pandas dataframe: contains information on the characters we wish to plot.
+    Must contain the columns "actor_gender" and "decade".
+    :param save_fig: bool: if true, the interactive plot will be saved in an HTML file, default = True
+    :param show_fig_png: bool: if true, the fig is displayed as a PNG (used for github display), else the figure is displayed
+    as an interactive graph, default = True
+    :param folder: string: name of the folder to save the figure in, default=''
+    :param file_name: string: name of the file to save the figure in,
+    default='Proportion of Men vs Women in Movies per Decade.html'
     """
 
     plot_male, plot_female = create_plot_male_female(character_data)
@@ -1212,14 +1245,13 @@ def plot_proportion_men_women_per_decade(character_data, save_fig=True, show_fig
         title='Proportion of Men vs Women in Movies per Decade',
         xaxis=dict(title='Decade'),
         yaxis=dict(title='Proportion of total actors'),
-        barmode='stack'
-    )
+        barmode='stack')
 
     # Create figure
     fig = go.Figure(data=[plot_female, plot_male], layout=layout)
 
     if save_fig:
-        fig.write_html(folder+"Proportion of Men vs Women in Movies per Decade.html", auto_open=True)
+        fig.write_html(folder + file_name, auto_open=True)
     if show_fig_png:
         fig.show("png")
     else:
@@ -1228,29 +1260,24 @@ def plot_proportion_men_women_per_decade(character_data, save_fig=True, show_fig
 
 def create_data_proportion_percentages_plot(character_data):
     """
-    This function plots the proportion of movies across decades that have less that 25% of women in them,
-    between 25-50%, between 50-75% and more than 75%
-    :param character_data: the data stored in a dataframe. This function assumes there is a column "decade"
-    as well as a "name" for the movies and "actor gender"
-    :param save_fig: if true, the interactive plot will be saved in an HTML file
-    :param show_fig_png: if true, the fig is displayed as a PNG (used for github display), else the figure is displayed
-    as an interactive graph
-    :return: no return, the plot is displayed
+    Computes the proportion of movies across decades that have less that 25% of women in them, between 25-50%,
+    between 50-75% and more than 75%.
+    :param character_data: pandas dataframe: contains information on the characters we wish to plot. Must contain
+    the columns "decade", as well as a "name" for the movies and "actor gender".
+    :return: [below_25_per_decade, quarter_50_per_decade, half_75_per_decade, above_75_per_decade] and unique_decades
     """
+
     # group by decade and by movie
     characters_grouped_by_decade_and_movie = character_data.groupby(['decade', 'name'])
-
     # Calculate the proportion of men and women per year per movie
     proportion_female_per_movie = \
         characters_grouped_by_decade_and_movie['actor_gender'].apply(lambda x: (x == 'F').sum() / len(x))
 
     # Convert the Series to a DataFrame for easier data handling in later analysis
     female_proportions = proportion_female_per_movie.reset_index()
-
-    # Rename the columns if needed
     female_proportions.columns = ['decade', 'name', 'proportion_female']
 
-    #Lists to store in which category each movie belongs to per year
+    # Lists to store in which category each movie belongs to per year
     below_25_per_decade = []
     quarter_50_per_decade = []
     half_75_per_decade = []
@@ -1288,19 +1315,18 @@ def create_data_proportion_percentages_plot(character_data):
 
 def subplot_proportion_movies_different_percentages_women(character_data, idx, subplot):
     """
-    This function plots the proportion of movies across decades that have less that 25% of women in them,
-    between 25-50%, between 50-75% and more than 75%
-    :param character_data: the data stored in a dataframe. This function assumes there is a column "decade"
-    as well as a "name" for the movies and "actor gender"
-    :param save_fig: if true, the interactive plot will be saved in an HTML file
-    :param show_fig_png: if true, the fig is displayed as a PNG (used for github display), else the figure is displayed
-    as an interactive graph
-    :return: no return, the plot is displayed
+    Creates an interactive subplot of the proportion of movies across decades that have less that 25% of women in them,
+    between 25-50%, between 50-75% and more than 75%.
+    :param character_data:  pandas dataframe: contains information on the characters we wish to plot. Must contain
+    the columns "decade", as well as a "name" for the movies and "actor gender".
+    :param idx: int: Where to plot the subplot in a 2x3 grid. The location is (idx%2+1, idx%3+1).
+    :param subplot: plotly.subplots object: plot to which the subplot will be added
     """
 
     categories = ['0-25%', '25-50%', '50-75%', '75-100%']
     data, unique_decades = create_data_proportion_percentages_plot(character_data)
 
+    # create all the traces
     for i, category in enumerate(categories):
         trace = go.Scatter(
             x=unique_decades,
@@ -1310,28 +1336,31 @@ def subplot_proportion_movies_different_percentages_women(character_data, idx, s
             name=category,
             marker_color=px.colors.qualitative.Plotly[i]
         )
+        # show legend only once
         if idx != 0:
             trace.update(dict(showlegend=False))
-        subplot.append_trace(trace, row=idx%2+1, col=idx%3+1)
+        subplot.append_trace(trace, row=idx % 2 + 1, col=idx % 3 + 1)
 
 
-def plot_proportion_movies_different_percentages_women(character_data, save_fig=True, show_fig_png=True, folder=''):
+def plot_proportion_movies_different_percentages_women(character_data, save_fig=True, show_fig_png=True, folder='',
+                                                       file_name="Proportion of Movies with Different Percentages of Female Actors.html"):
     """
-    This function plots the proportion of movies across decades that have less that 25% of women in them,
-    between 25-50%, between 50-75% and more than 75%
-    :param character_data: the data stored in a dataframe. This function assumes there is a column "decade"
-    as well as a "name" for the movies and "actor gender"
-    :param save_fig: if true, the interactive plot will be saved in an HTML file
-    :param show_fig_png: if true, the fig is displayed as a PNG (used for github display), else the figure is displayed
-    as an interactive graph
-    :return: no return, the plot is displayed
+    Displays an interactive graph of the proportion of movies across decades that have less that 25% of women in them,
+    between 25-50%, between 50-75% and more than 75% using the plotly library
+    :param character_data:  pandas dataframe: contains information on the characters we wish to plot. Must contain
+    the columns "decade", as well as a "name" for the movies and "actor gender".
+    :param save_fig: bool: if true, the interactive plot will be saved in an HTML file, default = True
+    :param show_fig_png: bool: if true, the fig is displayed as a PNG (used for github display), else the figure is
+    displayed as an interactive graph, default = True
+    :param folder: string: name of the folder to save the figure in, default=''
+    :param file_name: string: name of the file to save the figure in,
+    default="Proportion of Movies with Different Percentages of Female Actors.html"
     """
 
     # Create traces for stack plot
     traces = []
     categories = ['0-25%', '25-50%', '50-75%', '75-100%']
     data, unique_decades = create_data_proportion_percentages_plot(character_data)
-
     for i, category in enumerate(categories):
         trace = go.Scatter(
             x=unique_decades,
@@ -1353,7 +1382,6 @@ def plot_proportion_movies_different_percentages_women(character_data, save_fig=
     # Create figure
     fig = go.Figure(data=traces, layout=layout)
 
-    # Show the interactive plot
     if save_fig:
         fig.write_html(folder + "Proportion of Movies with Different Percentages of Female Actors.html", auto_open=True)
     if show_fig_png:
@@ -1363,9 +1391,17 @@ def plot_proportion_movies_different_percentages_women(character_data, save_fig=
 
 
 def create_data_age_plots(character_data):
+    """
+    Create plotly go.Scatter objects that can be used to plot the average age of female and male actors in movies per
+    decade and their respective 95% CI.
+    :param character_data: pandas dataframe: contains information on the characters we wish to plot.
+    Must contain the columns "actor_age", "actor_gender" and "decade".
+    :return: plot_men, men_upper_bound, men_lower_bound, plot_women, women_upper_bound, women_lower_bound
+    """
+
     # drop the actors with NaN as age but also actors with negative ages (which appeared in 1910)
     character_age = character_data.dropna(subset=['actor_age']).copy()
-    character_age = character_age[character_age['actor_age'] >= 0] # remove actors with a negative age
+    character_age = character_age[character_age['actor_age'] >= 0]  # remove actors with a negative age
     # Group by decade and gender
     characters_age_by_decade_gender = character_age.groupby(['decade', 'actor_gender'])
 
@@ -1387,95 +1423,103 @@ def create_data_age_plots(character_data):
     women_data['lower_bound'] = women_data['mean'] - 1.96 * women_data['sem']
     women_data['upper_bound'] = women_data['mean'] + 1.96 * women_data['sem']
 
-    #plot the plot with plotly to have an interactive plot
+    # create the plotly objects
     plot_men = go.Scatter(
-            name='Men Mean Age',
-            x=men_data['decade'],
-            y=men_data['mean'],
-            mode='lines',
-            line=dict(color='mediumturquoise'),
-        )
+        name='Men Mean Age',
+        x=men_data['decade'],
+        y=men_data['mean'],
+        mode='lines',
+        line=dict(color='mediumturquoise'),
+    )
     men_upper_bound = go.Scatter(
-            name='Upper Bound',
-            x = men_data['decade'],
-            y = men_data['upper_bound'],
-            mode='lines',
-            marker=dict(color="#444"),
-            line=dict(width=0),
-            showlegend=False
-        )
+        name='Upper Bound',
+        x=men_data['decade'],
+        y=men_data['upper_bound'],
+        mode='lines',
+        marker=dict(color="#444"),
+        line=dict(width=0),
+        showlegend=False
+    )
     men_lower_bound = go.Scatter(
-            name='Lower Bound',
-            x=men_data['decade'],
-            y=men_data['lower_bound'],
-            marker=dict(color="#444"),
-            line=dict(width=0),
-            mode='lines',
-            fillcolor='rgba(173, 216, 230, 0.3)',
-            fill='tonexty',
-            showlegend=False
-        )
+        name='Lower Bound',
+        x=men_data['decade'],
+        y=men_data['lower_bound'],
+        marker=dict(color="#444"),
+        line=dict(width=0),
+        mode='lines',
+        fillcolor='rgba(173, 216, 230, 0.3)',
+        fill='tonexty',
+        showlegend=False
+    )
     plot_women = go.Scatter(
-            name='Women Mean Age',
-            x=women_data['decade'],
-            y=women_data['mean'],
-            mode='lines',
-            line=dict(color='hotpink'),
-        )
-    women_upper_bound =  go.Scatter(
-            name='Upper Bound',
-            x = women_data['decade'],
-            y = women_data['upper_bound'],
-            mode='lines',
-            marker=dict(color="#444"),
-            line=dict(width=0),
-            showlegend=False
-        )
+        name='Women Mean Age',
+        x=women_data['decade'],
+        y=women_data['mean'],
+        mode='lines',
+        line=dict(color='hotpink'),
+    )
+    women_upper_bound = go.Scatter(
+        name='Upper Bound',
+        x=women_data['decade'],
+        y=women_data['upper_bound'],
+        mode='lines',
+        marker=dict(color="#444"),
+        line=dict(width=0),
+        showlegend=False
+    )
     women_lower_bound = go.Scatter(
-            name='Lower Bound',
-            x=women_data['decade'],
-            y=women_data['lower_bound'],
-            marker=dict(color="#444"),
-            line=dict(width=0),
-            mode='lines',
-            fillcolor='rgba(255, 182, 193, 0.3)',
-            fill='tonexty',
-            showlegend=False
-        )
+        name='Lower Bound',
+        x=women_data['decade'],
+        y=women_data['lower_bound'],
+        marker=dict(color="#444"),
+        line=dict(width=0),
+        mode='lines',
+        fillcolor='rgba(255, 182, 193, 0.3)',
+        fill='tonexty',
+        showlegend=False
+    )
 
     return plot_men, men_upper_bound, men_lower_bound, plot_women, women_upper_bound, women_lower_bound
 
 
 def subplot_average_age_actor_across_decades(character_data, idx, subplot):
     """
-    This function plots the average age of female and male actors across decades along with their 95% CI
-    :param character_data: the data stored in a dataframe. This function assumes there is a column "actor_age" as well as "actor_gender" and "decade"
-    :param save_fig: if true, the interactive plot will be saved in an HTML file
-    :param show_fig_png: if true, the fig is displayed as a PNG (used for github display), else the figure is displayed as an interactive graph
-    :return: no return, the plot is displayed
+    Creates an interactive subplot of the average age of female and male actors across decades along with their 95% CI.
+    :param character_data: pandas dataframe: contains information on the characters we wish to plot.
+    Must contain the columns "actor_age", "actor_gender" and "decade".
+    :param idx: int: Where to plot the subplot in a 2x3 grid. The location is (idx%2+1, idx%3+1).
+    :param subplot: plotly.subplots object: plot to which the subplot will be added
     """
 
-    plot_men, men_upper_bound, men_lower_bound, plot_women, women_upper_bound, women_lower_bound = create_data_age_plots(character_data)
+    plot_men, men_upper_bound, men_lower_bound, plot_women, women_upper_bound, women_lower_bound = \
+        create_data_age_plots(character_data)
 
+    # show legend only once
     if idx != 1:
         plot_women.update(dict(showlegend=False))
         plot_men.update((dict(showlegend=False)))
 
     plots = [plot_men, men_upper_bound, men_lower_bound, plot_women, women_upper_bound, women_lower_bound]
 
+    # append all traces to the main subplot
     for plot in plots:
-        subplot.append_trace(plot, row=idx%2+1, col=idx%3+1)
+        subplot.append_trace(plot, row=idx % 2 + 1, col=idx % 3 + 1)
 
-    subplot.update_yaxes(range=[20, 55], row=idx%2+1, col=idx%3+1)
+    subplot.update_yaxes(range=[20, 55], row=idx % 2 + 1, col=idx % 3 + 1)
 
 
-def plot_average_age_actor_across_decades(character_data,save_fig=True,show_fig_png=True, folder=''):
+def plot_average_age_actor_across_decades(character_data, save_fig=True, show_fig_png=True, folder='',
+                                          file_name="Average age of actor per decade per gender with 95% CI.html"):
     """
-    This function plots the average age of female and male actors across decades along with their 95% CI
-    :param character_data: the data stored in a dataframe. This function assumes there is a column "actor_age" as well as "actor_gender" and "decade"
-    :param save_fig: if true, the interactive plot will be saved in an HTML file
-    :param show_fig_png: if true, the fig is displayed as a PNG (used for github display), else the figure is displayed as an interactive graph
-    :return: no return, the plot is displayed
+    Displays an interactive plot of the average age of female and male actors across decades along with their 95% CI.
+    :param character_data: pandas dataframe: contains information on the characters we wish to plot.
+    Must contain the columns "actor_age", "actor_gender" and "decade".
+    :param save_fig: bool: if true, the interactive plot will be saved in an HTML file, default = True
+    :param show_fig_png: bool: if true, the fig is displayed as a PNG (used for github display), else the figure is displayed
+    as an interactive graph, default = True
+    :param folder: string: name of the folder to save the figure in, default=''
+    :param file_name: string: name of the file to save the figure in,
+    default="Average age of actor per decade per gender with 95% CI.html"
     """
 
     plot_men, men_upper_bound, men_lower_bound, plot_women, women_upper_bound, women_lower_bound = \
@@ -1495,7 +1539,7 @@ def plot_average_age_actor_across_decades(character_data,save_fig=True,show_fig_
 
     # Save the Html to open in a browser tab
     if save_fig:
-        fig.write_html(folder + "Average age of actor per decade per gender with 95% CI.html", auto_open=True)
+        fig.write_html(folder +file_name, auto_open=True)
     if show_fig_png:
         fig.show("png")
     else:
