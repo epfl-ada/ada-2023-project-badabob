@@ -552,36 +552,6 @@ def calculate_gender_ratio(genders: list):
     return nb_females / len(genders)
 
 
-def plot_gender_ratio(movies):
-    """
-    Plots the female to male gender ratio across time in years
-    :param movies: pandas dataframe
-    """
-    movies['gender_ratio'] = movies['main character genders'].apply(calculate_gender_ratio)
-    movies = movies.dropna(subset=['gender_ratio'])
-
-    ratio_data = movies[["decade", "gender_ratio"]]
-
-    ratio_means = ratio_data.groupby('decade').mean().reset_index()
-    ratio_means['gender_ratio'] = pd.to_numeric(ratio_means['gender_ratio'], errors='coerce')
-    ratio_ci = ratio_data.groupby('decade')['gender_ratio'].apply(stats.sem).mul(
-        stats.t.ppf(0.975, ratio_data.groupby('decade').size() - 1)).reset_index(name='conf')
-
-    plt.figure(figsize=(10, 6))
-    sns.set(style='whitegrid')
-
-    sns.lineplot(x=ratio_means['decade'], y=ratio_means['gender_ratio'], linewidth=2.5, alpha=0.8,
-                 label="Decade average")
-
-    plt.xlabel('Movie release decade')
-    plt.ylabel('Female/Male ratio')
-    plt.title('Gender ratio in main characters over time')
-    plt.fill_between(ratio_means['decade'], ratio_means['gender_ratio'] - ratio_ci['conf'],
-                     y2=ratio_means['gender_ratio'] + ratio_ci['conf'], alpha=0.2, label="95% Confidence Interval")
-    plt.legend()
-    plt.show()
-
-
 def create_data_plot_gender_ratio(movies):
     """
     Create plotly go.Scatter objects that can be used to plot the average main character gender ratio of movies per
@@ -656,7 +626,6 @@ def plot_gender_ratio_plotly(movies, save_fig=True, show_png=True, folder='', fi
         yaxis_title='Female/Male ratio',
         title='Gender ratio in main characters over time',
         hovermode="x")
-    fig.update_yaxes(range=[0, 1])
 
     if save_fig:
         fig.write_html(folder + file_name, auto_open=True)
