@@ -678,8 +678,14 @@ def random_movies_per_year(group):
 
 ################################## GENRES PREPROCESSING ################################################################
 
-
 def no_genres_in_list(genres, df):
+    """
+    Filters out movies from a dataframe that do not belong to any of the specified genres.
+    :param genres: list: List of genres to be considered for filtering.
+    :param df: pandas DataFrame: Dataframe containing movie information. 
+               It should have columns 'name' for movie names and 'genre' for movie genres.
+    :return: list: List of movie IDs (from the 'name' column) that belong to at least one of the specified genres.
+    """
     ID_no_accepted_genre = []
     for index, row in df.iterrows():
         ID = row['name']
@@ -693,6 +699,14 @@ def no_genres_in_list(genres, df):
 ################################## PERSONAS PREPROCESSING ##############################################################
 
 def extract_words(df, id_col, char_name_col, to_extract):
+    """
+    Extracts verbs, adjectives, and nouns from textual data in a dataframe.
+    :param df: pandas dataframe: df that contains the textual data to analyze in a column.
+    :param id_col: str: column name containing identifier for each text entry (here each movie has an ID and is associated with a summary).
+    :param char_name_col: str: column name containing character names.
+    :param to_extract: str: column name containing text to be analyzed.
+    :return: Lists of verbs, adjectives, nouns, and named entity chunks for each movie.
+    """
     tokens = pd.Series()
     tagged_tokens = []
     chunks_array = []
@@ -744,8 +758,7 @@ def extract_words(df, id_col, char_name_col, to_extract):
     return verbs_list, adjs_list, nouns_list, chunks_array
 
 
-def find_characters_genders_for_all_movies(movies_df,
-                                           characters_df):  # modify so you also return the full list of character names so that no need to redo fuzzy wory!
+def find_characters_genders_for_all_movies(movies_df, characters_df): 
     """
     Finds the gender of characters for all movies in a dataframe
     :param movies_df: pandas dataframe with movie information
@@ -817,7 +830,7 @@ def extract_context_strings(result_df):
         # Use fuzzy matching to find occurrences of the character name in the summary (non exact matches will also be found)
         occurrences = [i for i, word in enumerate(summary_words) if process.extractOne(word, [character])[1] > 50]
 
-        # Extract context strings for each occurrence, 2 words before and 2 words after
+        # Extract context strings for each occurrence, 3 words before and 3 words after
         context_strings = []
         for occurrence in occurrences:
             start_index = max(0, occurrence - 3)
@@ -826,7 +839,7 @@ def extract_context_strings(result_df):
             # Exclude the matched word from the context string
             matched_word = summary_words[occurrence]
             context_string = " ".join(summary_words[start_index:end_index])
-            context_string = context_string.replace(matched_word, "")  # Remove the matched word
+            context_string = context_string.replace(matched_word, "")  # Remove the matched word (character name)
             context_strings.append(context_string.strip())  # Strip leading and trailing spaces
 
         # Concatenate context strings if there are multiple occurrences for the same character name
@@ -843,6 +856,11 @@ def extract_context_strings(result_df):
 
 
 def create_gender_dictionaries(df):
+    """
+    Constructs dictionaries categorizing words by gender, decade, and category (Verbs, Adjectives and Nouns).
+    :param df: pandas dataframe: contains data on characters and their associated words.
+    :return: 2 dictionaries (one for male and one for female) containing word lists categorized by decade and category.
+    """
     # Initialize dictionaries for male and female characters
     male_dict = {}
     female_dict = {}
@@ -850,9 +868,9 @@ def create_gender_dictionaries(df):
     # Iterate through the dataframe and populate dictionaries
     for index, row in df.iterrows():
         gender = row['actor_gender']
-        decade = row['decade'] # we want the create a ductionnary per decade to later analyze
+        decade = row['decade'] # we want the create a dictionnary per decade to later analyze
 
-        # Check if the gender is male and handle empty lists (characters don't necessarily have words of the 3 cat. associated to them
+        # Check if the gender is male and handle empty lists (characters don't necessarily have words of the 3 cat. associated to them (they may have verbs but no adjectives or nouns for example)
         if gender == 'M':
             if decade not in male_dict:
                 male_dict[decade] = {'Verbs': [], 'Adjectives': [], 'Nouns': []} # create a dict per decade
@@ -861,7 +879,7 @@ def create_gender_dictionaries(df):
             male_dict[decade]['Adjectives'].extend(row['Adjectives']) if row['Adjectives'] else None
             male_dict[decade]['Nouns'].extend(row['Nouns']) if row['Nouns'] else None
 
-        # Check if the gender is female and handle empty lists
+        # Check if the gender is female and handle empty lists the same way as for men
         elif gender == 'F':
             if decade not in female_dict:
                 female_dict[decade] = {'Verbs': [], 'Adjectives': [], 'Nouns': []}
@@ -872,9 +890,12 @@ def create_gender_dictionaries(df):
 
     return male_dict, female_dict
 
-
-
 def calculate_word_frequencies(decades_dict):
+    """
+    Computes the frequency of words across different categories and decades.
+    :param decades_dict: Dictionary with words by decade and category associated to a specific gender
+    :return: Dictionary: word frequencies categorized by decade and category.
+    """
     # Initialize a dictionary to store frequencies for each decade
     all_frequencies = {}
 
@@ -891,16 +912,25 @@ def calculate_word_frequencies(decades_dict):
 
     return all_frequencies
 
-# Function to apply stemming to a list of words with a progress bar
 def stem_words_with_progress(word_list):
+    """
+    Stems words in a list using the Porter stemming algorithm with a progress bar to follow the run.
+    :param word_list: List[str]: list of words to be stemmed.
+    :return: List[str]: stemmed words.
+    """
     stemmer = PorterStemmer()
     stemmed_words = []
     for word in word_list:
         stemmed_words.append(stemmer.stem(word))
     return stemmed_words
 
-
 def subtract_frequencies(frequencies_1, frequencies_2):
+    """
+    Computes the normalized difference in word frequencies between two frequency dictionaries to obtain normalized relative frequencies.
+    :param frequencies_1: Dictionary: word frequencies categorized by decades and category
+    :param frequencies_2: Dictionary: word frequencies categorized by decades and category
+    :return: Dictionary: subtracted frequencies and unique words for each input dictionary.
+    """
     subtracted_frequencies = {}
     words_only_in_freq1 = {}
     words_only_in_freq2 = {}
@@ -912,12 +942,14 @@ def subtract_frequencies(frequencies_1, frequencies_2):
 
         for category in frequencies_1[decade].keys():
             common_words = set(frequencies_1[decade][category].keys()) & set(frequencies_2[decade][category].keys())
-
+            
+            # find the common words between the 2 dictionnaries and substract their frequencies
             for word in common_words:
                 freq_1 = frequencies_1[decade][category].get(word, 0)
                 freq_2 = frequencies_2[decade][category].get(word, 0)
                 subtracted_frequencies[decade][category][word] = freq_1 - freq_2
 
+            # keep track of the words that are only in one of the two dictionnaries
             remaining_words_1 = set(frequencies_1[decade][category].keys()) - common_words
             remaining_words_2 = set(frequencies_2[decade][category].keys()) - common_words
 
@@ -933,6 +965,11 @@ def subtract_frequencies(frequencies_1, frequencies_2):
 
 
 def plot_rel_freq_per_decade(relative_frequencies, categories):
+    """
+    Plots relative word frequencies per decade for given categories.
+    :param relative_frequencies: Dictionary: relative word frequencies categorized by decade and category.
+    :param categories: List[str]: list of word categories (e.g., Verbs, Adjectives, Nouns).
+    """
     # Create subplots for each category
     decades = relative_frequencies.keys()
     num_categories = len(categories)
@@ -963,15 +1000,20 @@ def plot_rel_freq_per_decade(relative_frequencies, categories):
             axs[i, j].set_title(f'{category} {decade}')
             axs[i, j].set_ylabel('Relative frequencies: Male - Female')
 
-            # Rotate x-axis tick labels
+            # Rotate x-axis tick labels to the words can be easily read
             axs[i, j].set_xticklabels(top_words, rotation=45, ha='right')
 
-    # Adjust layout and show the plots
     plt.tight_layout()
     plt.show()
 
 
 def plot_top_words_per_decade(frequencies, categories, col="blue"):
+    """
+    Plots top words per decade for given categories in a dictionnary.
+    :param frequencies: Dictionary: word frequencies categorized by decade and category.
+    :param categories: List[str]: list of word categories (e.g., Verbs, Adjectives, Nouns).
+    :param col: str: color for the plot bars (default is blue).
+    """
     # Create subplots for each category
     decades = frequencies.keys()
     num_categories = len(categories)
@@ -995,21 +1037,32 @@ def plot_top_words_per_decade(frequencies, categories, col="blue"):
             axs[i, j].set_title(f'{category} {decade}')
             axs[i, j].set_ylabel('Absolute Frequency Difference')
 
-            # Rotate x-axis tick labels
+            # Rotate x-axis tick labels to the words can be easily read
             axs[i, j].set_xticklabels(top_words, rotation=45, ha='right')
 
-    # Adjust layout and show the plots
     plt.tight_layout()
     plt.show()
 
 
 def subset_df(df, genre):
+    """
+    Subsets a dataframe based on a given genre to only keep the rows that are associated to the genre.
+    :param df: pandas dataframe: contains information on movies.
+    :param genre: str: genre to subset by.
+    :return: pandas dataframe: subset of the original dataframe filtered by genre.
+    """
     df_subset_genre = df[df['genre'].str.len() > 0]
     df_subset_genre = df_subset_genre[df_subset_genre['genre'].apply(lambda x: genre in x)]
     return df_subset_genre
 
 
 def plot_by_genre(genre, df):
+    """
+    Plots word frequencies per decade and category (Verbs, Adjectives and Nouns) for a specific genre.
+    :param genre: str: genre to analyze and plot.
+    :param df: pandas dataframe: contains information on movies and characters.
+    """
+    # use previously defined functions to create plots with associated words for each gender in genres we are interested in
     df_subset_genre = subset_df(df, genre)
     male_dict_genre, female_dict_genre = create_gender_dictionaries(df_subset_genre)
     male_frequencies_per_decade_genre = calculate_word_frequencies(male_dict_genre)
