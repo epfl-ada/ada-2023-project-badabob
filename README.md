@@ -121,7 +121,6 @@ Analysis of genre and evolution through time of most and less stereotypical movi
   <tr>
     <td>Lucille Niederhauser </td>
     <td>Data completion<br>
-        Data completion<br>
         Time Line Analysis<br>
         Clustering analysis<br>
         Interactive plots generation
