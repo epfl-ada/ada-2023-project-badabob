@@ -52,10 +52,12 @@ all the needed information on movies from  [IMDB](https://www.imdb.com/) using t
 [Cinemagoer](https://github.com/cinemagoer/cinemagoer) Python package.
 
 ### B) Data before 2010
-More than 3000 movies were deleted from the [CMU dataset](https://www.cs.cmu.edu/~ark/personas/) since they had 
-unknown languages. One of our next step would be to find the language of these movies on IMDB using 
-[Cinemagoer](https://github.com/cinemagoer/cinemagoer). This can be done easily since Cinemagoer allows to research
-movies not only with IMDB IDs but also with movie titles.
+Movies in the [CMU dataset](https://www.cs.cmu.edu/~ark/personas/) did not contain their IMDB IDs. In order to have a common ID
+between the provided dataset and the one retrieved from IMDB, we queried from [wikipedia](https://www.wikipedia.org/)
+the IMDB IDs corresponding to the freebase IDs of movies in the [CMU dataset](https://www.cs.cmu.edu/~ark/personas/). We also 
+queried at the same time the box-office revenues of movies, since we had only little data on these in the original dataset.
+Finally, more than 3000 movies were deleted from the [CMU dataset](https://www.cs.cmu.edu/~ark/personas/) since they had 
+unknown languages. We found the language of these movies on again IMDB using [Cinemagoer](https://github.com/cinemagoer/cinemagoer).
 
 ## Methods
 
