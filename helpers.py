@@ -28,13 +28,23 @@ import plotly.graph_objects as go
 import plotly.express as px
 import io
 from scipy import stats
+import pickle
+import matplotlib.pyplot as plt
+from collections import Counter
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk.stem import PorterStemmer
+from tqdm import tqdm
+
+
+######################################### DOWNLOADING NLTK PACKAGEs ####################################################
 
 nltk.download('maxent_ne_chunker')
 nltk.download('words')
 nltk.download('averaged_perceptron_tagger')
 nltk.download('stopwords')
 nltk.download('punkt')
-
+nltk.download('wordnet')
 
 ######################################### COMPLEMENTING DATASETS #######################################################
 
@@ -690,7 +700,8 @@ def extract_words(df, id_col, char_name_col, to_extract):
     adjs_list = []
     nouns_list = []
     stop_words = set(stopwords.words('english'))
-    # Adding tags for verbs, adjectives, and nouns
+    # Adding tags for verbs, adjectives, and nouns. These are Penn Treebank tags, the full list can be found here:
+    #https://www.ling.upenn.edu/courses/Fall_2003/ling001/penn_treebank_pos.html
     verb_tags = ['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']
     adj_tags = ['JJ', 'JJR', 'JJS']
     noun_tags = ['NN',
@@ -839,12 +850,12 @@ def create_gender_dictionaries(df):
     # Iterate through the dataframe and populate dictionaries
     for index, row in df.iterrows():
         gender = row['actor_gender']
-        decade = row['decade']  # we want the create a ductionnary per decade to later analyze
+        decade = row['decade'] # we want the create a ductionnary per decade to later analyze
 
         # Check if the gender is male and handle empty lists (characters don't necessarily have words of the 3 cat. associated to them
         if gender == 'M':
             if decade not in male_dict:
-                male_dict[decade] = {'Verbs': [], 'Adjectives': [], 'Nouns': []}  # create a dict per decade
+                male_dict[decade] = {'Verbs': [], 'Adjectives': [], 'Nouns': []} # create a dict per decade
 
             male_dict[decade]['Verbs'].extend(row['Verbs']) if row['Verbs'] else None
             male_dict[decade]['Adjectives'].extend(row['Adjectives']) if row['Adjectives'] else None
@@ -862,18 +873,23 @@ def create_gender_dictionaries(df):
     return male_dict, female_dict
 
 
-def calculate_word_frequencies(dictionary):
-    # Initialize a dictionary for each category (Verbs, Adjectives, Nouns)
-    frequencies = {'Verbs': {}, 'Adjectives': {}, 'Nouns': {}}
 
-    # Iterate through the dictionary and calculate word frequencies
-    for category, words in dictionary.items():
-        total_words = len(words)
-        word_counter = Counter(words)
-        frequencies[category] = {word: count / total_words for word, count in word_counter.items()}
+def calculate_word_frequencies(decades_dict):
+    # Initialize a dictionary to store frequencies for each decade
+    all_frequencies = {}
 
-    return frequencies
+    # Iterate through the decades and calculate word frequencies
+    for decade, dictionary in decades_dict.items():
+        frequencies = {'Verbs': {}, 'Adjectives': {}, 'Nouns': {}}
 
+        for category, words in dictionary.items():
+            total_words = len(words)
+            word_counter = Counter(words)
+            frequencies[category] = {word: count / total_words for word, count in word_counter.items()}
+
+        all_frequencies[decade] = frequencies
+
+    return all_frequencies
 
 # Function to apply stemming to a list of words with a progress bar
 def stem_words_with_progress(word_list):
