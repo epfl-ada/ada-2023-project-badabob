@@ -1368,7 +1368,7 @@ def plot_proportion_movies_different_percentages_women(character_data, save_fig=
     fig = go.Figure(data=traces, layout=layout)
 
     if save_fig:
-        fig.write_html(folder + "Proportion of Movies with Different Percentages of Female Actors.html", auto_open=True)
+        fig.write_html(folder + file_name, auto_open=True)
     if show_fig_png:
         fig.show("png")
     else:
