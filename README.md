@@ -20,9 +20,10 @@ The main question we aim to adress is: how has women's representation evolved ov
 The following questions will help us to address this problematic: 
 * How has the proportion of female actors in movies evolved over time? 
 * Is the movie industry giving more important and leading roles to women?
-* To which character personas are women mostly attributed and does this evolve through time?
+* What are the characteristics of stereotypical movies?
+* Which vocabulary is used when describing women and men and does this evolve through time?
 * Which movie genres are more affected?
-* Do the observed trends apply to all ethnicities? For instance, does the representation of women only increase for white women? 
+
 
 ## Additional datasets
 
@@ -50,21 +51,11 @@ for which the american movie title is the same as the original title. We then us
 all the needed information on movies from  [IMDB](https://www.imdb.com/) using the 
 [Cinemagoer](https://github.com/cinemagoer/cinemagoer) Python package.
 
-
 ### B) Data before 2010
 More than 3000 movies were deleted from the [CMU dataset](https://www.cs.cmu.edu/~ark/personas/) since they had 
 unknown languages. One of our next step would be to find the language of these movies on IMDB using 
 [Cinemagoer](https://github.com/cinemagoer/cinemagoer). This can be done easily since Cinemagoer allows to research
 movies not only with IMDB IDs but also with movie titles.
-
-Another important variable that we need to complete is the personas. We will not use another dataset to do so but run the 
-pipeline described in [Bamman et al., 2013](https://www.cs.cmu.edu/~dbamman/pubs/pdf/bamman+oconnor+smith.acl13.pdf)
-using the [code of the authors](https://github.com/dbamman/ACL2013_Personas). This is expected to take a
-long time, so we will run it on a random subset of plot summaries for each year to reduce computational time.
-
-### C) Ethnicity
-Addtionally, we would like to study how the ethnicity of women play a role in their representation. 
-We will find the ethnicity of actors on wikipedia pages ['lists of actors by ethnicity](https://en.wikipedia.org/wiki/Category:Actors_by_ethnic_or_national_descent).
 
 ## Methods
 
@@ -75,30 +66,27 @@ Preliminary exploration of the dataset to get familiar with it. Pre-processing a
 2. **Data completion**\
 Completion of the dataset up until 2022 using IMDb to obtain the final movie dataset and the final character dataset.
 
-3. **Acquisition of personas for all characters**\
-Running the personas algorithm from [Bamman et al., 2013](https://www.cs.cmu.edu/~dbamman/pubs/pdf/bamman+oconnor+smith.acl13.pdf) on more characters in our dataset to obtain a meaningful representation of the personas over time. 
-
-4. **Preliminary analysis**\
+3. **Preliminary analysis**\
 Analysis of the proportion of women in the movie industry per year.  
 Analysis of the age distribution of men vs women and the average age of both gender per year and comparison of the distributions using a Student t-test.
 
-5. **Personas analysis**\
-Extraction of the most attributed persona per year to men and women.
-Analyse the evolution of the personas attributed to men and women over time.
-Study how varied the personas associated to each gender are. 
+4. **Analysis of words linked to each genre**\
+Extraction of the most attributed adjectives, words and verbs per year to men and women.
+Analyse the evolution of words attributed to men and women over time.
+Study how varied the words associated to each gender are.
 
-6. **Main Characters** \
+5. **Main Characters** \
 Extract main characters and their gender from movie summaries to determine the proportion of women in leading roles and its evolution.\
 
-7. **Regression for representation**\
+6. **Regression for representation**\
 Regression analysis to predict when equal representation of women and men in movies will theoretically be reached according to the trends of the last century.
 
-8. **Genre Analysis**\
-Analysis of which women personas are more present in different genres using an ANOVA test.
-Re-do previous analysis (4 to 7) on data split by genre to see whether women's representation vary between genres.
+7. **Genre Analysis**\
+Re-do previous analysis (3 to 6) on data split by genre to see whether women's representation vary between genres.
 
-9. **Characteristics of stereotypical women characters**\
-Use clustering methods (to be determined) to find common factors that make a character fall into stereotypical personas.
+8. **Clustering of stereotypical movies**\
+Cluster movies according to their proportion of women, proportion of women main character and age differences between genders in order to identify more stereotypical movies.
+Analysis of genre and evolution through time of most and less stereotypical movies.
 
 ## Proposed timeline
 
@@ -154,10 +142,3 @@ Use clustering methods (to be determined) to find common factors that make a cha
     </td>
   </tr>
 </table>
-
-## Questions for TAs
-
-1. Is it enough to deal with the increasing number of movies every year by normalizing by the number of movies we have in a 
-given year?
-2. We would also be interested in studying whether higher-grossing movies have a more or less stereotypical depiction of women. Do you have an idea on how we could correct the revenues for inflation? 
-3. One way to adress certain limitations mentioned in the main character analysis could be to prompt a model such as gpt4 or Llama2. Would this be allowed?
