@@ -5,6 +5,7 @@ import ast
 from imdb import Cinemagoer
 import pandas as pd
 import nltk
+import json
 from nltk import pos_tag, word_tokenize
 from nltk.tokenize import sent_tokenize
 from nltk.corpus import stopwords
