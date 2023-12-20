@@ -8,22 +8,25 @@ But has this specific social movement bled into the entertainment industry? Has 
 
 ## Table of Contents
 
-1. [Research Questions](#research-questions)
-2. [Additional Datasets](#additional-datasets)
-3. [Methods](#methods)
-4. [Proposed Timeline](#proposed-timeline)
-5. [Organization Within the Team](#organization-within-the-team)
-6. [Questions for TAs](#questions-for-tas)
+1. [Datastory](#datastory)
+2. [Research Questions](#research-questions)
+3. [Additional Datasets](#additional-datasets)
+4. [Methods](#methods)
+5. [Proposed Timeline](#proposed-timeline)
+6. [Organization Within the Team](#organization-within-the-team)
+7. [Questions for TAs](#questions-for-tas)
+
+## Datastory
+Uncover the evolution of women representation in movies and how history influenced it by using this [link](https://anabeldorado.github.io/badabob-datastory.github.io/) to our datastory.
 
 ## Research questions
 The main question we aim to adress is: how has women's representation evolved over time in movies and does it relate to historical events linked to women's history in the United States?
-The following questions will help us to address this problematic: 
+The following questions will help us to address this: 
 * How has the proportion of female actors in movies evolved over time? 
 * Is the movie industry giving more important and leading roles to women?
 * What are the characteristics of stereotypical movies?
 * Which vocabulary is used when describing women and men and does this evolve through time?
 * Which movie genres are more affected?
-
 
 ## Additional datasets
 
@@ -60,6 +63,8 @@ Finally, more than 3000 movies were deleted from the [CMU dataset](https://www.c
 unknown languages. We found the language of these movies on again IMDB using [Cinemagoer](https://github.com/cinemagoer/cinemagoer).
 
 ## Methods
+
+**What factors do you plan to use for clustering? I don't see how it is relevant to gender bias either. Could be explained more.**
 
 1. **CMU dataset exploration and pre-processing**\
 Preliminary exploration of the dataset to get familiar with it. Pre-processing according to our research questions
@@ -109,38 +114,41 @@ Analysis of genre and evolution through time of most and less stereotypical movi
   <tr>
     <td>Julian Bär </td>
     <td>Natural Language Processing for Main characters identification<br>
-        Statistical and clustering analysis of Main character evolution<br>
-        Web page design
+        Analysis of main characters evolution<br>
+        Web page design and datastory writting
     </td>
   </tr>
   <tr>
     <td>Lucille Niederhauser </td>
     <td>Data completion<br>
+        Data completion<br>
         Time Line Analysis<br>
-        New personas computation and analysis
+        Clustering analysis<br>
+        Interactive plots generation
     </td>
   </tr>
   <tr>
     <td>Victoria Rivet</td>
     <td>Gender and personas preliminary analysis<br>
-        Regression analysis of actors' gender<br>
-        Correlation of the results with historical events<br>
-        Text for datastory
+        Natural Language Processing to get words associated to characters<br>
+        Analysis of the associated words by gender and genres<br>
+        Code cleaning
     </td>
   </tr>
   <tr>
     <td>Anabel Salazar</td>
     <td>Data preprocessing and filtering<br>
         Statistical analysis of actors' gender<br>
-        Analysis of women's features (other than gender)<br>
-        Text for datastory
+        Interactive plots generation<br>
+        Web page design and datastory writting
     </td>
   </tr>
   <tr>
     <td>Maximilian Wettstein</td>
     <td>Movie genres analysis<br>
-        Clustering analysis<br>
-        Generate interacting visualizations for datastory
+        Natural Language Processing to get words associated to characters<br>
+        Analysis of the associated words by gender and genres<br>
+        Code cleaning
     </td>
   </tr>
 </table>
