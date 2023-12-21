@@ -1156,9 +1156,9 @@ def plot_kmeans_3d(data, labels, columns):
     """
     fig = plt.figure(figsize=(8, 8))
     ax = fig.add_subplot(111, projection='3d')
-    x = np.array(data[[columns[0]])
-    y = np.array(data[[columns[1]])
-    z = np.array(data[[columns[2]])
+    x = np.array(data[columns[0]])
+    y = np.array(data[columns[1]])
+    z = np.array(data[columns[2]])
     ax.set_xlabel(columns[0])
     ax.set_ylabel(columns[1])
     ax.set_zlabel(columns[2])
