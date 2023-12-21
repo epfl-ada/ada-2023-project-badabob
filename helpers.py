@@ -5,10 +5,11 @@ import ast
 from imdb import Cinemagoer
 import pandas as pd
 import nltk
-import json
 from nltk import pos_tag, word_tokenize
 from nltk.tokenize import sent_tokenize
 from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
+import json
 from tqdm import tqdm
 import re
 import string
@@ -18,29 +19,24 @@ from flair.models import SequenceTagger
 from flair.data import Sentence
 from fuzzywuzzy import fuzz, process
 import seaborn as sns
-import matplotlib.pyplot as plt
 from scipy.stats import linregress
 from SPARQLWrapper import SPARQLWrapper, JSON
 import time
-from nltk.corpus import stopwords
 from sklearn.cluster import KMeans, DBSCAN
+from sklearn.metrics import silhouette_score
+from sklearn.preprocessing import MinMaxScaler
 from mpl_toolkits.mplot3d import Axes3D
 import plotly.graph_objects as go
 import plotly.express as px
+from plotly.subplots import make_subplots
 import io
 from scipy import stats
 import pickle
 import matplotlib.pyplot as plt
 from collections import Counter
-import nltk
-from nltk.tokenize import word_tokenize
-from nltk.stem import PorterStemmer
 from tqdm import tqdm
 import statsmodels.api as sm
-from plotly.subplots import make_subplots
 import warnings
-from sklearn.metrics import silhouette_score
-from sklearn.preprocessing import MinMaxScaler
 
 ######################################### DOWNLOADING NLTK PACKAGEs ####################################################
 
@@ -1507,8 +1503,8 @@ def plot_proportion_movies_different_percentages_women(character_data, save_fig=
     layout = go.Layout(
         title='Proportion of Movies with Different Percentages of Female Actors',
         xaxis=dict(title='Decade'),
-        yaxis=dict(title='Proportion of movies in a given decade'),
-        legend=dict(x=1.05, y=1, traceorder='normal', orientation='v')
+        yaxis=dict(title='Proportion of Movies'),
+        legend=dict(x=1.05, y=1, traceorder='normal', orientation='v', title_text='% of Female Actors')
     )
 
     # Create figure
