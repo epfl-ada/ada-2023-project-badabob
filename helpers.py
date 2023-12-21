@@ -1154,17 +1154,18 @@ def plot_kmeans_3d(data, labels, columns):
     :param labels: numpy array of size data.shape[0]: contains the cluster number of each data point in data
     :param columns: list of string, length = 3: contains the name of the three columns of data that we want to visualise.
     """
-    fig = plt.figure()
+    fig = plt.figure(figsize=(8, 8))
     ax = fig.add_subplot(111, projection='3d')
-    x = np.array(data[columns[0]])
-    y = np.array(data[columns[1]])
-    z = np.array(data[columns[2]])
+    x = np.array(data[[columns[0]])
+    y = np.array(data[[columns[1]])
+    z = np.array(data[[columns[2]])
     ax.set_xlabel(columns[0])
     ax.set_ylabel(columns[1])
     ax.set_zlabel(columns[2])
-
+    ax.view_init(elev=10, azim=110)
+    ax.auto_scale_xyz([min(x), max(x)], [min(y), max(y)], [min(z), max(z)])
     ax.scatter(x, y, z, marker="s", c=labels)
-
+    plt.tight_layout()
     plt.show()
 
 
