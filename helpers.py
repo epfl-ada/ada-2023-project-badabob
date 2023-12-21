@@ -39,6 +39,8 @@ from tqdm import tqdm
 import statsmodels.api as sm
 from plotly.subplots import make_subplots
 import warnings
+from sklearn.metrics import silhouette_score
+from sklearn.preprocessing import MinMaxScaler
 
 ######################################### DOWNLOADING NLTK PACKAGEs ####################################################
 
