@@ -38,7 +38,8 @@ from nltk.stem import PorterStemmer
 from tqdm import tqdm
 import statsmodels.api as sm
 from plotly.subplots import make_subplots
-
+import warnings
+warnings.filterwarnings('ignore') 
 
 ######################################### DOWNLOADING NLTK PACKAGEs ####################################################
 
