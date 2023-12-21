@@ -1077,6 +1077,89 @@ def plot_by_genre(genre, df):
         male_frequencies_per_decade_genre, female_frequencies_per_decade_genre)
     plot_rel_freq_per_decade(relative_frequencies_genre, ['Verbs', 'Adjectives', 'Nouns'])
 
+def rel_freq_interactive(df_, category):
+    # Pair words with their frequencies using apply
+    df = df_[df_['Category'] == category]
+    df['Word_Frequency'] = df.apply(lambda row: list(zip(row['Top Words'], row['Top Frequencies'])), axis=1)
+
+    # Explode the list of tuples into separate rows
+    df_exploded = df.explode('Word_Frequency')
+
+    # Split the tuple into separate columns
+    df_exploded[['Word', 'Frequency']] = pd.DataFrame(df_exploded['Word_Frequency'].tolist(), index=df_exploded.index)
+
+    # Drop the unnecessary columns
+    df_exploded = df_exploded.drop(['Top Words', 'Top Frequencies', 'Word_Frequency'], axis=1)
+
+    # Reset index for better visualization
+    df_exploded = df_exploded.reset_index(drop=True)
+
+    # Assuming df_exploded has the required columns: 'Word', 'Frequency', 'Decade'
+    decades = sorted(df_exploded['Decade'].unique())
+
+    # Create subplots with a slider
+    fig = make_subplots(rows=1, cols=1, specs=[[{'type': 'bar'}]])
+
+    # Add traces for the first dataset
+    trace = go.Bar(
+        x=df_exploded[df_exploded['Decade'] == decades[0]]['Word'],
+        y=df_exploded[df_exploded['Decade'] == decades[0]]['Frequency'],
+        name=str(decades[0]),
+        marker=dict(
+            color=df_exploded[df_exploded['Decade'] == decades[0]]['Frequency'].apply(lambda x: 'mediumturquoise' if x >= 0 else 'hotpink')
+        )
+    )
+
+    fig.add_trace(trace)
+
+    # Create slider steps
+    steps = []
+    for i, decade in enumerate(decades):
+        step = {
+            'args': [
+                {
+                    'x': [df_exploded[df_exploded['Decade'] == decade]['Word']],
+                    'y': [df_exploded[df_exploded['Decade'] == decade]['Frequency']],
+                    'type': 'bar',
+                    'marker.color': [df_exploded[df_exploded['Decade'] == decade]['Frequency'].apply(
+                        lambda x: 'mediumturquoise' if x >= 0 else 'hotpink'
+                    )]
+                },
+                {'title': f'Relative frequencies for {category} per decades'}
+            ],
+            'label': f'{decade}',
+            'method': 'update'
+        }
+        steps.append(step)
+
+    # Update layout to include sliders, set background color, add axis labels, and add overall title
+    fig.update_layout(
+        sliders=[{
+            'active': 0,
+            'steps': steps
+        }],
+        plot_bgcolor='white',  # Set the background color behind the bars to white
+        xaxis_title='Words',    # Add x-axis label
+        yaxis_title='Frequency',  # Add y-axis label
+        title_text=f"Relative frequencies for {category} per decades",  # Add overall title
+        title_x=0.5,  # Set the x position of the title
+        title_y=0.92,  # Set the y position of the title above the plot
+    )
+
+    # Show the plot
+    fig.show()
+    # Save as html
+    fig.write_html(f'interactive_plot_frequencies_{category}.html')
+
+def rel_freq_interactive_genre(df, category,genre):
+    df_subset_genre = subset_df(df, genre)
+    male_dict_genre, female_dict_genre = create_gender_dictionaries(df_subset_genre)
+    male_frequencies_per_decade_genre = calculate_word_frequencies(male_dict_genre)
+    female_frequencies_per_decade_genre = calculate_word_frequencies(female_dict_genre)
+    relative_frequencies_genre, unique_male_genre, unique_female_genre = subtract_frequencies(
+        male_frequencies_per_decade_genre, female_frequencies_per_decade_genre)
+    rel_freq_interactive(relative_frequencies_genre, category)
+
 
 ######################################## CLUSTERING OF STEREOTYPICAL MOVIES ############################################
 
