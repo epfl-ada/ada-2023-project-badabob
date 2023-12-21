@@ -39,7 +39,6 @@ from tqdm import tqdm
 import statsmodels.api as sm
 from plotly.subplots import make_subplots
 import warnings
-warnings.filterwarnings('ignore') 
 
 ######################################### DOWNLOADING NLTK PACKAGEs ####################################################
 
@@ -639,7 +638,8 @@ def plot_gender_ratio_plotly(movies, save_fig=True, show_png=True, folder='', fi
         xaxis_title='Movie release decade',
         yaxis_title='Female/Male ratio',
         title='Gender ratio in main characters over time',
-        hovermode="x")
+        hovermode="x",
+        legend=dict(x=0, y=1, traceorder='normal', orientation='h'))
 
     if save_fig:
         fig.write_html(folder + file_name, auto_open=True)
@@ -1367,6 +1367,7 @@ def subplot_proportion_movies_different_percentages_women(character_data, idx, s
 
     categories = ['0-25%', '25-50%', '50-75%', '75-100%']
     data, unique_decades = create_data_proportion_percentages_plot(character_data)
+    colors = ['rgba(201,148,199,1)', 'rgba(223,101,176,1)', 'rgba(221,28,119,1)', 'rgba(152,0,67,1)']
 
     # create all the traces
     for i, category in enumerate(categories):
@@ -1376,7 +1377,7 @@ def subplot_proportion_movies_different_percentages_women(character_data, idx, s
             mode='lines',
             stackgroup='one',
             name=category,
-            marker_color=px.colors.qualitative.Plotly[i]
+            marker_color=colors[i]
         )
         # show legend only once
         if idx != 0:
@@ -1403,13 +1404,16 @@ def plot_proportion_movies_different_percentages_women(character_data, save_fig=
     traces = []
     categories = ['0-25%', '25-50%', '50-75%', '75-100%']
     data, unique_decades = create_data_proportion_percentages_plot(character_data)
+    colors = ['rgba(201,148,199,1)', 'rgba(223,101,176,1)', 'rgba(221,28,119,1)', 'rgba(152,0,67,1)']
+
     for i, category in enumerate(categories):
         trace = go.Scatter(
             x=unique_decades,
             y=data[i],
             mode='lines',
             stackgroup='one',
-            name=category
+            name=category,
+            marker_color=colors[i]
         )
         traces.append(trace)
 
