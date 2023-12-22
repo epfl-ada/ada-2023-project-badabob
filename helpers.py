@@ -1048,16 +1048,6 @@ def top_freq(relative_frequencies, categories):
     })
     return top_words_df
 
-def top_freq_genre(df, category,genre):
-    df_subset_genre = df[df['genre']=='Action']
-    male_dict_genre, female_dict_genre = create_gender_dictionaries(df_subset_genre)
-    male_frequencies_per_decade_genre = calculate_word_frequencies(male_dict_genre)
-    female_frequencies_per_decade_genre = calculate_word_frequencies(female_dict_genre)
-    relative_frequencies_genre, unique_male_genre, unique_female_genre = subtract_frequencies(
-        male_frequencies_per_decade_genre, female_frequencies_per_decade_genre)
-    return top_freq(relative_frequencies_genre, category)
-
-
 def plot_top_words_per_decade(frequencies, categories, col="blue"):
     """
     Plots top words per decade for given categories in a dictionnary.
@@ -1122,7 +1112,7 @@ def plot_by_genre(genre, df):
         male_frequencies_per_decade_genre, female_frequencies_per_decade_genre)
     plot_rel_freq_per_decade(relative_frequencies_genre, ['Verbs', 'Adjectives', 'Nouns'])
 
-def rel_freq_interactive(df_, category,filename,title=True,show=True):
+def rel_freq_interactive(df_, category,filename,title,show=True):
     # Pair words with their frequencies using apply
     df = df_[df_['Category'] == category]
     df['Word_Frequency'] = df.apply(lambda row: list(zip(row['Top Words'], row['Top Frequencies'])), axis=1)
@@ -1156,8 +1146,6 @@ def rel_freq_interactive(df_, category,filename,title=True,show=True):
     )
 
     fig.add_trace(trace)
-    if title: plot_title=f"Relative frequencies for {category} per decades"
-    else: plot_title=title
     # Create slider steps
     steps = []
     for i, decade in enumerate(decades):
@@ -1171,7 +1159,7 @@ def rel_freq_interactive(df_, category,filename,title=True,show=True):
                         lambda x: 'mediumturquoise' if x >= 0 else 'hotpink'
                     )]
                 },
-                {'title': plot_title}
+                {'title': title}
             ],
             'label': f'{decade}',
             'method': 'update'
@@ -1187,7 +1175,7 @@ def rel_freq_interactive(df_, category,filename,title=True,show=True):
         plot_bgcolor='white',  # Set the background color behind the bars to white
         xaxis_title='Words',    # Add x-axis label
         yaxis_title='Frequency',  # Add y-axis label
-        title_text=f"Relative frequencies for {category} per decades",  # Add overall title
+        title_text=title,  # Add overall title
         title_x=0.5,  # Set the x position of the title
         title_y=0.92,  # Set the y position of the title above the plot
     )
@@ -1197,7 +1185,7 @@ def rel_freq_interactive(df_, category,filename,title=True,show=True):
     # Save as html
     fig.write_html(filename)
 
-def rel_freq_interactive_genre(df, category,genre,filename,title,show=False):
+def rel_freq_interactive_genre(df, category,genre,filename,title,show_=False):
     df_subset_genre = subset_df(df, genre)
     male_dict_genre, female_dict_genre = create_gender_dictionaries(df_subset_genre)
     male_frequencies_per_decade_genre = calculate_word_frequencies(male_dict_genre)
@@ -1205,7 +1193,7 @@ def rel_freq_interactive_genre(df, category,genre,filename,title,show=False):
     relative_frequencies_genre, unique_male_genre, unique_female_genre = subtract_frequencies(male_frequencies_per_decade_genre, female_frequencies_per_decade_genre)
     relative_frequencies_genre
     to_plot=top_freq(relative_frequencies_genre, ['Verbs', 'Adjectives', 'Nouns'])
-    rel_freq_interactive(to_plot, category,filename,title,show=show)
+    rel_freq_interactive(to_plot, category,filename,title,show=show_)
 
 
 ######################################## CLUSTERING OF STEREOTYPICAL MOVIES ############################################
