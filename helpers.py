@@ -635,7 +635,7 @@ def plot_gender_ratio_plotly(movies, save_fig=True, show_png=True, folder='', fi
     fig.update_layout(
         xaxis_title='Movie release decade',
         yaxis_title='Female/Male ratio',
-        title='Gender ratio in main characters over time',
+        title='Gender Ratio in Main Characters over Time',
         hovermode="x",
         legend=dict(x=0, y=1, traceorder='normal', orientation='h'))
 
@@ -1182,7 +1182,7 @@ def rel_freq_interactive(df_, category,filename,title,show=True):
 
     # Show the plot
     if show:
-        fig.show()
+        fig.show('svg')
     # Save as html
     fig.write_html(filename)
 
