@@ -1246,7 +1246,7 @@ def plot_sse(features_X, start=2, end=11):
     plt.plot(sse.k, sse.sse)
     plt.xlabel("K")
     plt.ylabel("Sum of Squared Errors")
-    plt.title('Sum of squared errors of k-means clustering for different values of k')
+    plt.title('Sum of Squared Errors of K-means Clustering for Different Values of k')
     plt.show()
 
 
@@ -1261,7 +1261,7 @@ def plot_kmeans_2d(data, labels, columns):
     plt.scatter(data[columns[0]], data[columns[1]], c=labels, alpha=0.6, s=20)
     plt.xlabel(columns[0])
     plt.ylabel(columns[1])
-    plt.title('K-means clustering')
+    plt.title('K-means Clustering')
     plt.show()
 
 
@@ -1407,7 +1407,7 @@ def plot_proportion_men_women_per_decade(character_data, save_fig=True, show_fig
     layout = go.Layout(
         title='Proportion of Men vs Women in Movies per Decade',
         xaxis=dict(title='Decade'),
-        yaxis=dict(title='Proportion of total actors'),
+        yaxis=dict(title='Proportion of Total Actors'),
         barmode='stack')
 
     # Create figure
@@ -1699,7 +1699,7 @@ def plot_average_age_actor_across_decades(character_data, save_fig=True, show_fi
     fig.update_layout(
         yaxis_title='Age',
         xaxis_title='Decade',
-        title='Average age of actors per decade per gender with 95% CI',
+        title='Average Age of Actors per Decade per Gender with 95% CI',
         hovermode="x",
         legend=dict(x=0, y=1, traceorder='normal', orientation='h')
     )
