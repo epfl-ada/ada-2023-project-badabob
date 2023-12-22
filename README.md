@@ -19,6 +19,13 @@ But has this specific social movement bled into the entertainment industry? Has 
 ## Datastory
 Uncover the evolution of women representation in movies and how history influenced it by using this [link](https://anabeldorado.github.io/badabob-datastory.github.io/) to our datastory.
 
+## Directory Organisation
+* DATA: Folder containing intermediate data output of the notebook M3_DataCreation&Exploration. These outputs were saved and are provided here to avoid having to re-run time consuming functions.
+* M2.ipynb: Milestone 2 jupyter notebook.
+* M3_Analysis.ipynb: Milestone 3 jupyter notebook that contains our data analysis. The data used in this notebook is created in M3_DataCreation&Exploration.ipynb.
+* M3_DataCreation&Exploration.ipynb: Milestone 3 jupyter notebook that contains the code that created the data used in M3_Analysis.ipynb.
+* helpers.py: Contains helper functions used in our notebooks.
+
 ## Research questions
 The main question we aim to adress is: how has women's representation evolved over time in movies and does it relate to historical events linked to women's history in the United States?
 The following questions will help us to address this: 
