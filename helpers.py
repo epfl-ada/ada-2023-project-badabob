@@ -1181,7 +1181,8 @@ def rel_freq_interactive(df_, category,filename,title,show=True):
     )
 
     # Show the plot
-    fig.show()
+    if show:
+        fig.show()
     # Save as html
     fig.write_html(filename)
 
